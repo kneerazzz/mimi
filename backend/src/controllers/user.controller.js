@@ -3,6 +3,8 @@ import { ApiError} from '../utils/apiError.js'
 import { ApiResponse } from '../utils/apiResponse.js'
 import { User } from '../models/user.model.js';
 import jwt from 'jsonwebtoken';
+import uploadOnCloudinary from '../utils/fileUpload.js';
+import deleteFromCloudinary from '../utils/fileDelete.js';
 
 const generateAccessAndRefreshTokens = async(userId) => {
     try{
@@ -214,6 +216,31 @@ const updateUserDetails = asyncHandler(async(req, res) => {
     )
 })
 const updateProfilePic = asyncHandler(async(req, res) => {
+    const profilePicLocalPath = req.files?.path;
+    if(!profilePicLocalPath){
+        throw new ApiError(400, "Bad request")
+    }
+    const user = req.user;
+    if(!user){
+        throw new ApiError(401, "Unauthorised action")
+    }
+    const profilePic = await uploadOnCloudinary(profilePicLocalPath)
+    if(profilePic.url === ""){
+        throw new ApiError(500, "Error uploading files")
+    }
+    if(user.profilePic){
+        await deleteFromCloudinary(user.profilePic)
+    }
+    user.profilePic = profilePic.url
+    await user.save()
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {
+            user: user.profilePic
+        }, "Profile Picture updated successfully")
+    )
 
 })
 
