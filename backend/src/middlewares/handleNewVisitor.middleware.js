@@ -38,3 +38,4 @@ const handelNewVisitor = asyncHandler(async(req, res, next) => {
         throw new ApiError(500, "Error creating new visitor accound")
     }
 })
+export default handelNewVisitor;

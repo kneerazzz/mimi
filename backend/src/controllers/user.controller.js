@@ -295,5 +295,6 @@ export {
     updateUserPassword,
     updateUserDetails,
     updateProfilePic,
-    refreshAccessToken
+    refreshAccessToken,
+    getUserDetails
 }
