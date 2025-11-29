@@ -2,6 +2,7 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { ApiError} from '../utils/apiError.js'
 import { ApiResponse } from '../utils/apiResponse.js'
 import { User } from '../models/user.model.js';
+import jwt from 'jsonwebtoken';
 
 const generateAccessAndRefreshTokens = async(userId) => {
     try{
@@ -78,6 +79,194 @@ const registerUser = asyncHandler(async(req, res) => {
 
 })
 
+const loginUser = asyncHandler(async(req, res) => {
+    const {username, email, password} = req.body;
+    if(!username && !email || !password){
+        throw new ApiError(400, "All fields are required!")
+    }
+    const user = await User.findOne({
+        $or: [{ username }, { email }]
+    })
+    if(!user){
+        throw new ApiError(409, "User with this username or email doesn't exist")
+    }
+    const isMatch = await User.iSPasswordCorrect(password)
+    if(!isMatch){
+        throw new ApiError(401, "Incorrect password")
+    }
+    const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id);
+    const loggedInUser = await User.findById(user._id).select(
+        "-password -accessToken"
+    )
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none"
+    }
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, {
+        ...options,
+        maxAge: 24 * 60 * 60 * 1000
+    })
+    .cookie("refreshToken", refreshToken, {
+        ...options,
+        maxAge: 15 * 24 * 60 * 60 * 1000
+    })
+    .json(
+        new ApiResponse(200, {
+            user: loggedInUser, accessToken, refreshToken
+        }),
+        "User logged in successfully"
+    )
+})
+
+const logoutUser = asyncHandler(async(req, res) => {
+    const user = req.user;
+    if(!user){
+        throw new ApiError(401, "Unauthorised access")
+    }
+    await User.findByIdAndUpdate(user._id, {
+        $unset: {
+            refreshToken: 1
+        }
+    }, {
+        new: true
+    })
+    const options = {
+        httpOnly: true,
+        sameSite: "none",
+        secure: true
+    }
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+        new ApiResponse(200, {}, "User logout successful!")
+    )
+})
+
+const getUserDetails = asyncHandler(async(req, res) => {
+    const user = req.user;
+    if(!user){
+        throw new ApiError(401, "Unauthorised access")
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {user: user}, "User details fetched successfully")
+    )
+})
+
+const updateUserPassword = asyncHandler(async(req, res) => {
+    const { newPassword } = req.body;
+    if(!newPassword){
+        throw new ApiError(400, "new password required")
+    }
+    const user = req.user;
+    if(!user){
+        throw new ApiError(401,"Unauthorised access")
+    }
+    user.password = newPassword;
+    const updatedUser = await user.save().select("-possword -refreshToken")
+    return res
+    .status(200)
+    .json(200, {user: updatedUser}, "Password changed successfully")
+})
+
+const updateUserDetails = asyncHandler(async(req, res) => {
+    const {name , username, bio} = req.body;
+    const user = req.user;
+    if(!user){
+        throw new ApiError(401, "Unauthorised access")
+    }
+    if(!username && !name && !bio){
+        throw new ApiError(400, "Nothing to update here")
+    }
+    if(username){
+        const normalizedUsername = username.trim().toLowerCase();
+        if(normalizedUsername !== req.user?.username){
+            const existingUser = await User.findOne({username})
+            if(existingUser){
+                throw new ApiError(403, "User with similar username already exists")
+            }
+        }
+        else {
+            throw new ApiError(400, "Enter new Username")
+        }
+    }
+    const updateData = {};
+    if(username) updateData.username = username.trim().toLowerCase();
+    if(name) updateData.name = name.trim();
+    if(bio) updateData.bio = bio;
+    const updatedUser = await User.findByIdAndUpdate(user._id, {
+        $set: updateData
+    }, {new: true}).select("-password -refreshToken")
+    
+    if(!updatedUser){
+        throw new ApiError(500, "Something went wrong while updating details!")
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {user: updatedUser}, "User Details updated successfully")
+    )
+})
+const updateProfilePic = asyncHandler(async(req, res) => {
+
+})
+
+const refreshAccessToken = asyncHandler(async(req, res) => {
+    const incomingRefreshToken = req.cookies?.refreshToken;
+    if(!incomingRefreshToken){
+        throw new ApiError(401, "Unauthorised request")
+    }
+
+    try {
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+        const user = await User.findById(decodedToken._id)
+        if(!user){
+            throw new ApiError(401, "Invalid refresh token")
+        }
+        if(incomingRefreshToken !== user.refreshToken){
+            throw new ApiError(401, "Refresh token is expired or used!")
+        }
+        const options = {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none"
+        }
+        const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
+        user.refreshToken = refreshToken
+
+        await user.save({validateBeforeSave: true})
+        return res
+        .status(200)
+        .cookie("accessToken", accessToken, {
+            ...options,
+            maxAge: 24 * 60 * 60 * 1000
+        })
+        .cookie("refreshToken", refreshToken, {
+            ...options,
+            maxAge: 15 * 24 * 60 * 60 * 1000
+        })
+        .json(
+            new ApiResponse(200, {}, "Access token refreshed successfully")
+        )
+
+    }catch(error){
+        throw new ApiError(401, error?.message || "Invalid refresh token")
+    }
+})
 
 
-export {registerUser}
+export {
+    registerUser,
+    loginUser,
+    logoutUser,
+    updateUserPassword,
+    updateUserDetails,
+    updateProfilePic,
+    refreshAccessToken
+}
