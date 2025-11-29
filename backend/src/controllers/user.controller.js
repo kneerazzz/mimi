@@ -5,6 +5,7 @@ import { User } from '../models/user.model.js';
 import jwt from 'jsonwebtoken';
 import uploadOnCloudinary from '../utils/fileUpload.js';
 import deleteFromCloudinary from '../utils/fileDelete.js';
+import { REFRESH_TOKEN_SECRET } from '../config/env.js';
 
 const generateAccessAndRefreshTokens = async(userId) => {
     try{
@@ -87,12 +88,12 @@ const loginUser = asyncHandler(async(req, res) => {
         throw new ApiError(400, "All fields are required!")
     }
     const user = await User.findOne({
-        $or: [{ username }, { email }]
+        $or: [{ username }, { email }, {is_registered: true}]
     })
     if(!user){
         throw new ApiError(409, "User with this username or email doesn't exist")
     }
-    const isMatch = await User.iSPasswordCorrect(password)
+    const isMatch = await user.isPasswordCorrect(password)
     if(!isMatch){
         throw new ApiError(401, "Incorrect password")
     }
@@ -171,7 +172,8 @@ const updateUserPassword = asyncHandler(async(req, res) => {
         throw new ApiError(401,"Unauthorised access")
     }
     user.password = newPassword;
-    const updatedUser = await user.save().select("-possword -refreshToken")
+    await user.save();
+    const updatedUser = await User.findById(user._id).select("-password -refreshToken")
     return res
     .status(200)
     .json(200, {user: updatedUser}, "Password changed successfully")
@@ -251,7 +253,7 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
     }
 
     try {
-        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+        const decodedToken = jwt.verify(incomingRefreshToken, REFRESH_TOKEN_SECRET)
         const user = await User.findById(decodedToken._id)
         if(!user){
             throw new ApiError(401, "Invalid refresh token")

@@ -1,6 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import corn from 'node-cron'
+import { cacheMemeFeed } from './controllers/meme.controller.js'
 
 const app = express()
 
@@ -22,11 +24,18 @@ app.use(express.urlencoded({
 
 app.use(cookieParser())
 
-
+cacheMemeFeed()
+corn.schedule(" 0 * * * * ", () => {
+    console.log("caching memes from reddit werarara")
+    cacheMemeFeed()
+})
 
 import userRouter from './routes/user.routes.js'
-
+import memeRouter from './routes/Meme.routes.js'
 
 app.use("/api/v1/users", userRouter)
+app.use("/api/v1/memes", memeRouter)
+
+
 
 export default app;
