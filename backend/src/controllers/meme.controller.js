@@ -8,7 +8,7 @@ import { fetchMemeFeedFromReddit } from "../utils/reddit.js";
 import { CreatedMeme } from "../models/createdMeme.model.js";
 import { Comment } from '../models/comment.model.js'
 
-const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") => {
+const getInteractionStatus = async(feed, userId, contentType = "PermanentMemes") => {
     if(!feed || feed.length === 0){
         return {}
     }
@@ -17,12 +17,12 @@ const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") =
         Like.find({
             user: userId,
             contentId: { $in: contentIds },
-            contentType: "MemeFeedPost"
+            contentType
         }).select("contentId"),
         SavedMeme.find({
             user: userId,
             contentId: { $in: contentIds },
-            contentType: "MemeFeedPost"
+            contentType
         }).select("contentId")
     ])
     const likedIds = new Set(userLIkes.map(like => like.contentId.toString()));
@@ -151,7 +151,7 @@ const getMemeDetails = asyncHandler(async(req, res) => {
     }
     content = await contentModel.findById(contentId);
     if(!content){
-        throw new ApiError(404, "Meme not found! ab kya cheda b...")
+        throw new ApiError(404, "Meme not found! ab kya cheda bz...")
     }
 
     const {likeCount = 0 , comments = []} = await Promise.all([

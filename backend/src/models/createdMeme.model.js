@@ -18,6 +18,34 @@ const createdMemeSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    originalFeedPostId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "MemeFeedPost",
+        index: true,
+        sparse: true,
+        unique: true,
+        default: null
+    },
+    clonedContentUrl: {
+        type: String,
+    },
+    clonedTitle: {
+        type: String
+    },
+    clonedAuther: {
+        type: String
+    },
+    clonedRedditPostId: {
+        type: String
+    },
+    clonedOriginalScore: {
+        type: Number,
+        default: 0
+    },
+    clonedSubreddit: {
+        type: String,
+        default: "troyy hu"
+    },
     textLayers: [
         {
             text: {
