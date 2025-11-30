@@ -5,9 +5,11 @@ import { MemeFeedPost } from "../models/memeFeedPost.model.js";
 import { Like } from "../models/like.model.js"
 import { SavedMeme } from "../models/savedMeme.model.js";
 import { fetchMemeFeedFromReddit } from "../utils/reddit.js";
+import { CreatedMeme } from "../models/createdMeme.model.js";
+import { Comment } from '../models/comment.model.js'
 
 const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") => {
-    if(!feed && feed.length === 0){
+    if(!feed || feed.length === 0){
         return {}
     }
     const contentIds = feed.map(post => post._id)
@@ -44,7 +46,7 @@ const cacheMemeFeed = async() => {
     }
 
     const bulkOperations = freshMemes.map(meme => ({
-        updatedOn: {
+        updateOne: {
             filter: { redditPostId: meme.redditPostId },
             update: {
                 $set: { ...meme}
@@ -64,7 +66,7 @@ const getHomeFeed = asyncHandler(async(req, res) => {
     const skip = (parseInt(page)-1) * parseInt(limit);
     const parsedLimit = parseInt(limit);
     
-    let feed  = await MemeFeedPost({})
+    let feed  = await MemeFeedPost.find({})
                 .sort({originalScore: -1, lastCachedAt :-1})
                 .skip(skip)
                 .limit(parsedLimit)
@@ -133,8 +135,80 @@ const toggleLike = asyncHandler(async(req, res) => {
     )
 })
 
+const getMemeDetails = asyncHandler(async(req, res) => {
+    const currentUser = req.user;
+    const { contentId, contentType } = req.params;
+    if(!contentId || !contentType){
+        throw new ApiError(400, "Content Id and Type are required!")
+    }
+    let contentModel, content;
+    if(contentType === "MemeFeedPost"){
+        contentModel = MemeFeedPost;
+    } else if(contentType === "CreatedMeme"){
+        contentModel = CreatedMeme;
+    } else {
+        throw new ApiError(400, "Invalid content type for details")
+    }
+    content = await contentModel.findById(contentId);
+    if(!content){
+        throw new ApiError(404, "Meme not found! ab kya cheda b...")
+    }
+
+    const {likeCount = 0 , comments = []} = await Promise.all([
+        Like.countDocuments({contentId, contentType}),
+        Comment.find({contentId, contentType})
+                .populate({path: 'user', select: 'username profilePic is_registered'})
+                .sort({ createdAt: 1 })
+    ])
+    let isLiked = false;
+    let isSaved = false;
+
+    if(currentUser && currentUser.is_registered){
+        [isLiked, isSaved] = await Promise.all([
+            Like.exists({user: currentUser._id, contentId, contentType}),
+            SavedMeme.exists({user: currentUser._id, contentId, contentType})
+        ])
+    }
+
+    const {page = 1, limit = 20} = req.query;
+    const skip = (parseInt(page)-1) * parseInt(limit)
+    const parsedLimit = parseInt(limit)
+
+    let feed = await MemeFeedPost.find({})
+                .sort({lastCachedAt: -1, originalScore: -1})
+                .skip(skip)
+                .limit(parsedLimit)
+
+
+    if(currentUser && currentUser.is_registered){
+        feed = await getInteractionStatus(feed, currentUser._id, "MemeFeedPost")
+    } else {
+        feed = feed.map(post => ({
+            ...post.toObject(),
+            isLiked: false,
+            isSaved: false
+        }))
+    }
+    const details = {
+        meme: content.toObject(),
+        stats: {
+            likeCount,
+            commentCount: comments?.length,
+            isLiked: !!isLiked,
+            isSaved: !!isSaved
+        },
+        comments: comments
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {memeDetails: details, backgroundFeed: feed}, "MemeDetails fetched successfully")
+    )
+})
+
 export {
     toggleLike,
     cacheMemeFeed,
-    getHomeFeed
+    getHomeFeed,
+    getMemeDetails,
 }

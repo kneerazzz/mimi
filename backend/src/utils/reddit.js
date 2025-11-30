@@ -39,7 +39,7 @@ const fetchMemeFeedFromReddit = async (limit = 100) => {
 
     try {
         const response = await axios.get(url, {
-            headers: { 'User-Agent': 'MimiBoard-Contextual-Meme-Generator-v1' }
+            headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36'}
         });
         const children = response.data?.data?.children;
 

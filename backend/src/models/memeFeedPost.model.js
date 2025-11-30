@@ -38,6 +38,5 @@ memeFeedPostSchema.index({
     lastCachedAt: 1
 }, {expireAfterSeconds: TTL_SECONDS})
 
-memeFeedPostSchema.index({redditPostId: 1})
 
 export const MemeFeedPost = mongoose.model("MemeFeedPost", memeFeedPostSchema)
