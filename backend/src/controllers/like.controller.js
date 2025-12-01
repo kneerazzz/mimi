@@ -38,7 +38,7 @@ const getOrCreatePermanentMeme = async(contentId) => {
 
 const toggleLike = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || user.is_registered){
+    if(!user || !user.is_registered){
         throw new ApiError(401, "Login required")
     }
     const {contentId, contentType} = req.params;
@@ -87,7 +87,7 @@ const toggleLike = asyncHandler(async(req, res) => {
 
 const getAllLikedMemes = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || user.is_registered){
+    if(!user || !user.is_registered){
         throw new ApiError(401, "Login required!")
     }
     const memes = await Like.find({
@@ -96,8 +96,7 @@ const getAllLikedMemes = asyncHandler(async(req, res) => {
     }).select("contentId")
     const permanentMemeIds = memes.map(meme => meme.contentId);
     const likedMemes = await CreatedMeme.find({_id: { $in: permanentMemeIds}})
-        .populate({ path: "creator", select: "username profilePic finalImageUrl"})
-
+        .populate({ path: "creator", select: "username profilePic"})
     return res
     .status(200)
     .json(
