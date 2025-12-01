@@ -35,7 +35,7 @@ const createdMemeSchema = new mongoose.Schema({
     clonedAuther: {
         type: String
     },
-    clonedRedditPostId: {
+    originalRedditId: {
         type: String
     },
     clonedOriginalScore: {

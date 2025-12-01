@@ -1,63 +1,110 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
-import { MemeFeedPost } from "../models/memeFeedPost.model.js";
-import { Like } from "../models/like.model.js"
-import { SavedMeme } from "../models/savedMeme.model.js";
-import { fetchMemeFeedFromReddit } from "../utils/reddit.js";
-import { CreatedMeme } from "../models/createdMeme.model.js";
-import { Comment } from '../models/comment.model.js'
+import { MemeFeedPost } from "../models/MemeFeedPost.model.js";
+import { fetchMemeFeedFromReddit } from "../utils/reddit.util.js";
+import { CreatedMeme } from "../models/CreatedMeme.model.js";
+import { Like } from "../models/Like.model.js" 
+import { SavedMeme } from "../models/SavedMeme.model.js";
+import { Comment } from "../models/Comment.model.js"; 
 
-const getInteractionStatus = async(feed, userId, contentType = "PermanentMemes") => {
-    if(!feed || feed.length === 0){
-        return {}
+/**
+ * Helper function to determine if a user has interacted with a temporary post, 
+ * considering its permanent clone (CreatedMeme) record.
+ * @param {Array} feed - Array of MemeFeedPost documents (the temporary feed).
+ * @param {ObjectId} userId - The registered user's ID.
+ * @param {string} contentType - The expected content type for the feed (MemeFeedPost).
+ */
+const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") => {
+    if (!feed || feed.length === 0) {
+        return []; 
     }
-    const contentIds = feed.map(post => post._id)
-    const {userLIkes, userSaves} = await Promise.all([
+    
+    const tempContentIds = feed.map(post => post._id);
+    const permanentRedditIds = feed.map(post => post.redditPostId);
+    
+    const permanentClones = await CreatedMeme.find({ originalRedditId: { $in: permanentRedditIds } }).select('_id originalRedditId');
+    
+    const cloneMap = new Map();
+    permanentClones.forEach(clone => {
+        cloneMap.set(clone.originalRedditId, clone._id.toString());
+    });
+
+    const permanentCloneMDBIds = Array.from(cloneMap.values());
+    const allInteractionIds = [...tempContentIds, ...permanentCloneMDBIds];
+
+
+    // 3. Query the Like and SavedMeme collections for all interaction IDs
+    const [userLikes, userSaves] = await Promise.all([
         Like.find({
             user: userId,
-            contentId: { $in: contentIds },
-            contentType
+            contentId: { $in: allInteractionIds },
+            contentType: { $in: ["MemeFeedPost", "CreatedMeme"] } 
         }).select("contentId"),
         SavedMeme.find({
             user: userId,
-            contentId: { $in: contentIds },
-            contentType
+            contentId: { $in: allInteractionIds },
+            contentType: { $in: ["MemeFeedPost", "CreatedMeme"] }
         }).select("contentId")
     ])
-    const likedIds = new Set(userLIkes.map(like => like.contentId.toString()));
+
+    const likedIds = new Set(userLikes.map(like => like.contentId.toString()));
     const savedIds = new Set(userSaves.map(save => save.contentId.toString()));
 
+    // 4. Map the results back to the original temporary feed posts
     return feed.map(post => {
-        const postId = post._id.toString();
+        const tempMDBId = post._id.toString();
+        const permRedditId = post.redditPostId;
+        const permanentCloneId = cloneMap.get(permRedditId); // Look up permanent ID using Reddit ID
+
+        // Check interaction status against: 
+        // a) The temporary MDB ID (in case the like hasn't been switched over yet)
+        const checkTemporary = likedIds.has(tempMDBId); 
+        
+        // b) The permanent clone MDB ID (where the persistence record lives)
+        const checkPermanent = permanentCloneId && likedIds.has(permanentCloneId);
+        
+        const isLiked = checkTemporary || checkPermanent;
+        
+        // Repeat logic for isSaved
+        const checkTemporarySave = savedIds.has(tempMDBId);
+        const checkPermanentSave = permanentCloneId && savedIds.has(permanentCloneId);
+        const isSaved = checkTemporarySave || checkPermanentSave;
+
+
         const postObject = post.toObject ? post.toObject() : post;
         return {
             ...postObject,
-            isLiked: likedIds.has(postId),
-            isSaved: savedIds.has(postId)
+            isLiked: isLiked,
+            isSaved: isSaved
         }
     })
 }
 
 const cacheMemeFeed = async() => {
-    const freshMemes = await fetchMemeFeedFromReddit(100);
-    if(freshMemes.length === 0){
-        throw new ApiError(500, "Something went wrong while fetching memes")
-    }
-
-    const bulkOperations = freshMemes.map(meme => ({
-        updateOne: {
-            filter: { redditPostId: meme.redditPostId },
-            update: {
-                $set: { ...meme}
-            },
-            upsert: true
-        }
-    }))
     try {
-        await MemeFeedPost.bulkWrite(bulkOperations)
+        const freshMemes = await fetchMemeFeedFromReddit(100);
+        
+        if(freshMemes.length === 0){
+            console.warn("Meme Feed Cache: Fetched zero valid memes.");
+            return; 
+        }
+
+        const bulkOperations = freshMemes.map(meme => ({
+            updateOne: { 
+                filter: { redditPostId: meme.redditPostId },
+                update: {
+                    $set: { ...meme}
+                },
+                upsert: true
+            }
+        }))
+        
+        const result = await MemeFeedPost.bulkWrite(bulkOperations)
+        console.log(`Cache Update Success: Inserted ${result.upsertedCount}, Matched/Updated: ${result.matchedCount}`);
+
     } catch (error) {
-        console.log("error while bulk caching memes")
+        console.error("CRITICAL MongoDB Error during bulk caching:", error);
     }
 }
 
@@ -73,6 +120,7 @@ const getHomeFeed = asyncHandler(async(req, res) => {
     
     const currentUser = req.user;
     if(currentUser && currentUser.is_registered){
+        // Pass the feed, user, and the temporary content type
         feed = await getInteractionStatus(feed, currentUser._id, "MemeFeedPost")
     } else {
         feed = feed.map(post => ({
@@ -97,47 +145,11 @@ const getHomeFeed = asyncHandler(async(req, res) => {
     )
 })
 
-const toggleLike = asyncHandler(async(req, res) => {
-    if(!req.user && !req.user.is_registered){
-        throw new ApiError(401, "Login required to like reels")
-    }
-    const {contentId , contentType} = req.body;
-    if(!contentId || !contentType){
-        throw new ApiError(400, "Content id and contentType is required")
-    }
-    const likesFilter = {
-        user: req.user._id,
-        contentId: contentId,
-        contentType: contentType
-    }
-    const existingLike = await Like.findOne(likesFilter)
-    let message, isLiked;
-
-    if(existingLike){
-        await Like.deleteOne(likesFilter);
-        message = "Meme unliked successfully";
-        isLiked = false
-    } else {
-        await Like.create(likesFilter);
-        message = "Meme liked successfully";
-        isLiked = true
-    }
-    const newLikeCount = await Like.countDocuments({
-        contentId: contentId,
-        contentType: contentType
-    });
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, {
-            isLiked, newLikeCount, contentId, contentType
-        }, message)
-    )
-})
 
 const getMemeDetails = asyncHandler(async(req, res) => {
     const currentUser = req.user;
-    const { contentId, contentType } = req.params;
+    const { contentId, contentType } = req.params; // Using req.params as per router definition
+    
     if(!contentId || !contentType){
         throw new ApiError(400, "Content Id and Type are required!")
     }
@@ -151,10 +163,11 @@ const getMemeDetails = asyncHandler(async(req, res) => {
     }
     content = await contentModel.findById(contentId);
     if(!content){
-        throw new ApiError(404, "Meme not found! ab kya cheda bz...")
+        throw new ApiError(404, "Meme not found! Check the ID or content type.")
     }
 
-    const {likeCount = 0 , comments = []} = await Promise.all([
+    // 1. Fetch interaction stats and comments
+    const [likeCount, comments] = await Promise.all([
         Like.countDocuments({contentId, contentType}),
         Comment.find({contentId, contentType})
                 .populate({path: 'user', select: 'username profilePic is_registered'})
@@ -162,7 +175,6 @@ const getMemeDetails = asyncHandler(async(req, res) => {
     ])
     let isLiked = false;
     let isSaved = false;
-
     if(currentUser && currentUser.is_registered){
         [isLiked, isSaved] = await Promise.all([
             Like.exists({user: currentUser._id, contentId, contentType}),
@@ -189,6 +201,8 @@ const getMemeDetails = asyncHandler(async(req, res) => {
             isSaved: false
         }))
     }
+    
+    // 4. Consolidate response data
     const details = {
         meme: content.toObject(),
         stats: {
@@ -199,6 +213,7 @@ const getMemeDetails = asyncHandler(async(req, res) => {
         },
         comments: comments
     }
+    
     return res
     .status(200)
     .json(
@@ -207,7 +222,6 @@ const getMemeDetails = asyncHandler(async(req, res) => {
 })
 
 export {
-    toggleLike,
     cacheMemeFeed,
     getHomeFeed,
     getMemeDetails,
