@@ -4,7 +4,8 @@ import mongoose from 'mongoose'
 const createdMemeSchema = new mongoose.Schema({
     creator: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        default: "troyy_hu"
     },
     template: {
         type: mongoose.Schema.Types.ObjectId,
