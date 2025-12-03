@@ -5,7 +5,6 @@ const createdMemeSchema = new mongoose.Schema({
     creator: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        default: "troyy_hu"
     },
     template: {
         type: mongoose.Schema.Types.ObjectId,
@@ -33,7 +32,7 @@ const createdMemeSchema = new mongoose.Schema({
     clonedTitle: {
         type: String
     },
-    clonedAuther: {
+    clonedAuthor: {
         type: String
     },
     originalRedditId: {

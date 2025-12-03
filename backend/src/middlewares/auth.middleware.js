@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from 'jsonwebtoken'
 
 
-export const verifyJwt = asyncHandler(async(req, res) => {
+export const verifyJwt = asyncHandler(async(req, res, next) => {
     try {
         const token = req.cookies?.accessToken || 
         req.header("Authorization")?.replace("Bearer ", "").trim();
@@ -16,12 +16,14 @@ export const verifyJwt = asyncHandler(async(req, res) => {
         const decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET);
         const user = await User.findById(decodedToken?.id);
         if(!user){
-            throw new ApiError(401, "Invalid access token")
+            console.warn(`JWT found for non-existent user ID: ${userId}`);
+            return next()
         }
         req.user = user;
 
         next();
     } catch (error) {
-        throw new ApiError(401, error?.message || "something went wrong")
+        console.warn(`JWT verification failed: ${error.message}`);
+        next();
     }
 })

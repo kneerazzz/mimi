@@ -1,12 +1,12 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
-import { MemeFeedPost } from "../models/MemeFeedPost.model.js";
+import { MemeFeedPost } from "../models/memeFeedPost.model.js";
 import { fetchMemeFeedFromReddit } from "../utils/reddit.util.js";
-import { CreatedMeme } from "../models/CreatedMeme.model.js";
-import { Like } from "../models/Like.model.js" 
-import { SavedMeme } from "../models/SavedMeme.model.js";
-import { Comment } from "../models/Comment.model.js"; 
+import { CreatedMeme } from "../models/createdMeme.model.js";
+import { Like } from "../models/like.model.js" 
+import { SavedMeme } from "../models/savedMeme.model.js";
+import { Comment } from "../models/comment.model.js"; 
 
 /**
  * Helper function to determine if a user has interacted with a temporary post, 
@@ -154,13 +154,28 @@ const getMemeDetails = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Content Id and Type are required!")
     }
     let contentModel, content;
+    let finalContentId = contentId;
+    let finalContentType = contentType;
     if(contentType === "MemeFeedPost"){
+        const temporaryMeme = await MemeFeedPost.findById(contentId);
+        if(!temporaryMeme){
+            throw new ApiError(404, "Temporary meme content not found!")
+        }
+        const permanentMeme = await CreatedMeme.findOne({
+            originalRedditId: temporaryMeme.redditPostId
+        })
+        if(permanentMeme){
+            finalContentId = permanentMeme._id;
+            finalContentType = "CreatedMeme"
+        }
         contentModel = MemeFeedPost;
     } else if(contentType === "CreatedMeme"){
         contentModel = CreatedMeme;
     } else {
         throw new ApiError(400, "Invalid content type for details")
     }
+
+
     content = await contentModel.findById(contentId);
     if(!content){
         throw new ApiError(404, "Meme not found! Check the ID or content type.")
@@ -168,8 +183,8 @@ const getMemeDetails = asyncHandler(async(req, res) => {
 
     // 1. Fetch interaction stats and comments
     const [likeCount, comments] = await Promise.all([
-        Like.countDocuments({contentId, contentType}),
-        Comment.find({contentId, contentType})
+        Like.countDocuments({contentId: finalContentId, contentType: finalContentType}),
+        Comment.find({contentId: finalContentId, contentType: finalContentType})
                 .populate({path: 'user', select: 'username profilePic is_registered'})
                 .sort({ createdAt: 1 })
     ])
@@ -177,8 +192,8 @@ const getMemeDetails = asyncHandler(async(req, res) => {
     let isSaved = false;
     if(currentUser && currentUser.is_registered){
         [isLiked, isSaved] = await Promise.all([
-            Like.exists({user: currentUser._id, contentId, contentType}),
-            SavedMeme.exists({user: currentUser._id, contentId, contentType})
+            Like.exists({user: currentUser._id, contentId: finalContentId, contentType: finalContentType}),
+            SavedMeme.exists({user: currentUser._id, contentId: finalContentId, contentType: finalContentType})
         ])
     }
 

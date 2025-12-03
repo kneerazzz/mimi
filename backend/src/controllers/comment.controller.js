@@ -1,9 +1,9 @@
-import { Comment } from "../models/comment.model";
-import { CreatedMeme } from "../models/createdMeme.model";
-import { MemeFeedPost } from "../models/memeFeedPost.model";
-import { ApiError } from "../utils/apiError";
-import { ApiResponse } from "../utils/apiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
+import { Comment } from "../models/comment.model.js";
+import { CreatedMeme } from "../models/createdMeme.model.js";
+import { MemeFeedPost } from "../models/memeFeedPost.model.js";
+import { ApiError } from "../utils/apiError.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const getOrCreatePermanentMeme = async(contentId) => {
     const temporaryMeme = await MemeFeedPost.findById(contentId);
@@ -22,7 +22,7 @@ const getOrCreatePermanentMeme = async(contentId) => {
     permanentMeme = await CreatedMeme.create({
         originalRedditId: temporaryMeme.redditPostId,
         clonedContentUrl: temporaryMeme.contentUrl,
-        clonedAuther: temporaryMeme.author,
+        clonedAuthor: temporaryMeme.author,
         clonedTitle: temporaryMeme.title,
         finalImageUrl: temporaryMeme.contentUrl,
         isAIGenerated: false,

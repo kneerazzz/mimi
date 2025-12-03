@@ -1,9 +1,9 @@
-import { MemeFeedPost } from "../models/memeFeedPost.model"
-import { ApiError } from "../utils/apiError";
-import { CreatedMeme } from "../models/createdMeme.model";
-import { asyncHandler } from "../utils/asyncHandler";
-import { SavedMeme } from "../models/savedMeme.model";
-import { ApiResponse } from "../utils/apiResponse";
+import { MemeFeedPost } from "../models/memeFeedPost.model.js"
+import { ApiError } from "../utils/apiError.js";
+import { CreatedMeme } from "../models/createdMeme.model.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { SavedMeme } from "../models/savedMeme.model.js";
+import { ApiResponse } from "../utils/apiResponse.js";
 
 const getOrCreatePermanentMeme = async(contentId) => {
     const temporaryMeme = await MemeFeedPost.findById(contentId);
@@ -22,7 +22,7 @@ const getOrCreatePermanentMeme = async(contentId) => {
     permanentMeme = await CreatedMeme.create({
         originalRedditId: temporaryMeme.redditPostId,
         clonedContentUrl: temporaryMeme.contentUrl,
-        clonedAuther: temporaryMeme.author,
+        clonedAuthor: temporaryMeme.author,
         clonedTitle: temporaryMeme.title,
         finalImageUrl: temporaryMeme.contentUrl,
         isAIGenerated: false,
@@ -84,12 +84,16 @@ const getAllSavedMemes = asyncHandler(async(req, res) => {
     }
     const memes = await SavedMeme.find({
         user: user._id,
-        contentType: "CreatedMeme" || "MemeFeedPost"
+        contentType: "CreatedMeme"
     }).select("contentId")
     if(memes.length === 0){
-        throw new ApiError(404, "No saved memes found")
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(200, [], "No memes found")
+        )
     }
-    const permanentMemeIds = savedMemes.map(meme => meme.contentId);
+    const permanentMemeIds = memes.map(meme => meme.contentId);
     const savedMemes = await CreatedMeme.find({_id: { $in: permanentMemeIds }})
         .populate({path: "creator", select: "username profilePic"})
     

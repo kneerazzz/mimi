@@ -1,9 +1,9 @@
-import { CreatedMeme } from "../models/createdMeme.model";
-import { Like } from "../models/like.model";
-import { MemeFeedPost } from "../models/memeFeedPost.model";
-import { ApiError } from "../utils/apiError";
-import { ApiResponse } from "../utils/apiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
+import { CreatedMeme } from "../models/createdMeme.model.js";
+import { Like } from "../models/like.model.js";
+import { MemeFeedPost } from "../models/memeFeedPost.model.js";
+import { ApiError } from "../utils/apiError.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 
 const getOrCreatePermanentMeme = async(contentId) => {
@@ -23,11 +23,12 @@ const getOrCreatePermanentMeme = async(contentId) => {
     permanentMeme = await CreatedMeme.create({
         originalRedditId: temporaryMeme.redditPostId,
         clonedContentUrl: temporaryMeme.contentUrl,
-        clonedAuther: temporaryMeme.author,
+        clonedAuthor: temporaryMeme.author,
         clonedTitle: temporaryMeme.title,
         finalImageUrl: temporaryMeme.contentUrl,
         isAIGenerated: false,
         template: null,
+        creator: "692fe332caca25fcecc0f909"
     })
     return {
         finalContentId: permanentMeme._id,
@@ -47,7 +48,7 @@ const toggleLike = asyncHandler(async(req, res) => {
     let finalContentId = contentId;
     let finalContentType = contentType;
 
-    if(contentType = "MemeFeedPost"){
+    if(contentType === "MemeFeedPost"){
         const result = await getOrCreatePermanentMeme(contentId);
         finalContentId = result.finalContentId;
         finalContentType = result.finalContentType; 
@@ -91,10 +92,14 @@ const getAllLikedMemes = asyncHandler(async(req, res) => {
     }
     const memes = await Like.find({
         user: user._id,
-        contentType: "CreatedMeme" || "MemeFeedPost"
+        contentType: "CreatedMeme"
     }).select("contentId")
     if(memes.length === 0){
-        throw new ApiError(404, "No memes found")
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(200, [], "No liked memes found!")
+        )
     }
     const permanentMemeIds = memes.map(meme => meme.contentId);
     const likedMemes = await CreatedMeme.find({_id: { $in: permanentMemeIds}})
