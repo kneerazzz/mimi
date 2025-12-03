@@ -1,0 +1,106 @@
+import { MemeFeedPost } from "../models/memeFeedPost.model"
+import { ApiError } from "../utils/apiError";
+import { CreatedMeme } from "../models/createdMeme.model";
+import { asyncHandler } from "../utils/asyncHandler";
+import { SavedMeme } from "../models/savedMeme.model";
+import { ApiResponse } from "../utils/apiResponse";
+
+const getOrCreatePermanentMeme = async(contentId) => {
+    const temporaryMeme = await MemeFeedPost.findById(contentId);
+    if(!temporaryMeme){
+        throw new ApiError(404, "Original meme content not found")
+    }
+    let permanentMeme = await CreatedMeme.findOne({
+        originalRedditId: temporaryMeme.redditPostId
+    })
+    if(permanentMeme){
+        return {
+            finalContentId: permanentMeme._id,
+            finalContentType: "CreatedMeme"
+        }
+    }
+    permanentMeme = await CreatedMeme.create({
+        originalRedditId: temporaryMeme.redditPostId,
+        clonedContentUrl: temporaryMeme.contentUrl,
+        clonedAuther: temporaryMeme.author,
+        clonedTitle: temporaryMeme.title,
+        finalImageUrl: temporaryMeme.contentUrl,
+        isAIGenerated: false,
+        template: null,
+    })
+    return {
+        finalContentId: permanentMeme._id,
+        finalContentType: "CreatedMeme"
+    }
+}
+
+
+const toggleSave = asyncHandler(async(req, res) => {
+    const user = req.user;
+    if(!user || !user.is_registered){
+        throw new ApiError(401, "Login required to save memes")
+    }
+    const {contentId, contentType} = req.params;
+    if(!contentId || !contentType){
+        throw new ApiError(400, "content Id and Type are required!")
+    }
+    let finalContentId = contentId;
+    let finalContentType = contentType;
+    if(contentType === "MemeFeedPost"){
+        const result = await getOrCreatePermanentMeme(contentId);
+        finalContentId = result.finalContentId;
+        finalContentType = result.finalContentType;
+    } else if(!["CreatedMeme"].includes(contentType)){
+        throw new ApiError(400, "Invalid content type for saving")
+    }
+    const savingFilter = {
+        user: user._id,
+        contentId: finalContentId,
+        contentType: finalContentType
+    }
+    let message, isSaved;
+    const existingSave = await SavedMeme.findOne(savingFilter);
+    if(existingSave){
+        await SavedMeme.deleteOne(savingFilter);
+        message = "Meme removed from Saves";
+        isSaved = false
+    }
+    else {
+        await SavedMeme.create(savingFilter);
+        message = "Meme saved successfully!";
+        isSaved = true
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {isSaved, contentId: finalContentId, contentType: finalContentType}, message)
+    )
+})
+
+const getAllSavedMemes = asyncHandler(async(req, res) => {
+    const user = req.user;
+    if(!user || !user.is_registered){
+        throw new ApiError(401, "Login required gng")
+    }
+    const memes = await SavedMeme.find({
+        user: user._id,
+        contentType: "CreatedMeme" || "MemeFeedPost"
+    }).select("contentId")
+    if(memes.length === 0){
+        throw new ApiError(404, "No saved memes found")
+    }
+    const permanentMemeIds = savedMemes.map(meme => meme.contentId);
+    const savedMemes = await CreatedMeme.find({_id: { $in: permanentMemeIds }})
+        .populate({path: "creator", select: "username profilePic"})
+    
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, savedMemes, "Successfully fetched the saved Memes!")
+    )
+})
+
+export {
+    toggleSave, 
+    getAllSavedMemes
+}

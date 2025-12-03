@@ -28,7 +28,6 @@ const getOrCreatePermanentMeme = async(contentId) => {
         finalImageUrl: temporaryMeme.contentUrl,
         isAIGenerated: false,
         template: null,
-        creator: "troyy hu"
     })
     return {
         finalContentId: permanentMeme._id,
@@ -94,6 +93,9 @@ const getAllLikedMemes = asyncHandler(async(req, res) => {
         user: user._id,
         contentType: "CreatedMeme" || "MemeFeedPost"
     }).select("contentId")
+    if(memes.length === 0){
+        throw new ApiError(404, "No memes found")
+    }
     const permanentMemeIds = memes.map(meme => meme.contentId);
     const likedMemes = await CreatedMeme.find({_id: { $in: permanentMemeIds}})
         .populate({ path: "creator", select: "username profilePic"})
