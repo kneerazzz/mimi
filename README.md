@@ -1,71 +1,111 @@
-💡 MimiBoard: The Contextual Meme Generator
+💡 MimiBoard: Contextual AI Meme Generator
 
 🌟 Overview
 
-MimiBoard is a next-generation social application that combines content discovery with AI-powered creative tools. Our core feature analyzes a user's real-life scenario (e.g., "I worked 10 hrs today") using the Gemini API, extracts the emotional context, and matches it with the perfect meme template to generate highly relatable, personalized content.
+MimiBoard is a next-generation platform blending meme discovery with AI-powered creation. Users input real-life scenarios, and our system uses the Gemini API to analyze the emotional context, find the perfect template, and instantly generate a highly relatable meme.
 
-Core Value
+The architecture is built for persistence and performance, solving the challenge of managing permanent user interactions on a volatile, transient content feed.
 
-We eliminate the tedious search for the perfect reaction image by using contextual AI matching and providing a smooth, progressive editing experience.
+Core Value Proposition
 
-🔥 Key Application Features
+Contextual AI Matching: Generate a meme based on your mood, not just random tags.
 
-Feature
+Seamless Persistence: User activity (Likes, Saves, Comments) is permanently retained, even when the source content expires from the cache.
 
-Description
+Progressive Editing: Simple editing mode for speed, with an optional Advanced Editor for granular control.
 
-Contextual AI Generation
+🛠️ Technology Stack (Full-Stack MERN + AI)
 
-User input (scenario) is analyzed by Gemini to provide an optimal template and short caption. The system matches the scenario's emotion tags (e.g., tired, frustrated) against our template library to suggest the perfect meme base.
-
-Progressive Editor
-
-Offers a streamlined creation workflow: Simple Mode (Top/Bottom text, Black/White color, size) for quick edits, with an optional Advanced Mode (X/Y coordinates, fonts, layering) unlocked for complex designs.
-
-Template Management
-
-Users can Save Templates to a personal gallery for easy reuse. This is key for speed and personalization within the editor workflow.
-
-Discovery Feed
-
-Fast, stable infinite scroll feed fueled by fresh, cached content pulled from the public Reddit API.
-
-Optional Login
-
-Every visitor is tracked anonymously via a UUID. All cached preferences, saved items, and generated memes are retained and converted into a permanent account upon registration.
-
-Social Layer
-
-Comprehensive Polymorphic system for Liking, Commenting, and Saving any content (Discovery or Created Memes).
-
-🛠️ Technology Stack
-
-Category
+Layer
 
 Technology
 
-Frontend
+Key Components
 
-Next.js (React)
+Backend (API)
 
-Backend
+Node.js (Express)
 
-Node.js, Express.js
+Asynchronous Controllers, Express Router, Cron Jobs
 
 Database
 
 MongoDB (Mongoose)
 
+TTL Indices, Polymorphic Schemas (8 Models), Advanced Aggregation
+
+Frontend
+
+Next.js (React)
+
+High-performance, SSR-capable User Interface
+
 AI/Tools
 
-Google Gemini API, Reddit API
+Google Gemini API
 
-🚀 Quick Start (Backend)
+Scenario analysis, Tag & Caption generation
+
+Data Source
+
+Reddit Public API
+
+Content caching for the Discovery Feed
+
+🚀 Architectural Highlights
+
+MimiBoard's complexity lies in its dual content system and persistence management:
+
+1. Dual Content Architecture
+
+Transient Content (MemeFeedPost): Content cached from Reddit that automatically expires every 24 hours via a TTL index.
+
+Permanent Content (CreatedMeme): The single, long-term destination for all user-generated content and cloned permanent memes.
+
+2. Seamless User Persistence (Clone-on-Interaction)
+
+To prevent liked/saved content from disappearing when the cache expires, MimiBoard uses a robust persistence mechanism:
+
+User Action
+
+System Logic
+
+Result
+
+Anonymous Visit
+
+A permanent User document is created with a UUID and linked to the session cookie.
+
+User activity is tracked even without registration.
+
+Like/Save MemeFeedPost
+
+The controller runs the Clone-or-Find-and-Swap helper.
+
+The temporary post is cloned into a new CreatedMeme document (owned by a System ID), and the Like record is immediately switched to point to the permanent CreatedMeme ID.
+
+TTL Expiry
+
+The temporary MemeFeedPost is deleted.
+
+The user's Like record is intact, pointing to the permanent clone. History is preserved.
+
+3. AI Creation Pipeline (The Core Feature)
+
+User inputs a scenario (e.g., "When I try to use a new Mongoose hook...").
+
+The backend calls the Gemini API to get structured JSON output: {"tags": ["confusion", "struggle"], "caption": "Me watching the docs."}.
+
+The system queries the MemeTemplate collection, matching the emotionTags against the template's manual tags.
+
+The best match is returned to the user for editing.
+
+⚙️ Quick Start (Backend)
 
 Clone the repository and navigate to the server/ directory.
 
 Install dependencies: npm install
 
-Create a .env file and populate it with your MONGODB_URI, authentication secrets, and GEMINI_API_KEY.
+Create a .env file with MONGODB_URI, Auth Secrets, and GEMINI_API_KEY.
 
-Run the server: npm start
+Run the server: npm start (This will automatically start the caching job).
