@@ -3,6 +3,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import corn from 'node-cron'
 import { cacheMemeFeed } from './controllers/meme.controller.js'
+import generateTemplateSeedFile from './config/generate_template_seed.js'
 import handelNewVisitor from './middlewares/handleNewVisitor.middleware.js'
 const app = express()
 
@@ -21,6 +22,8 @@ app.use(express.static('public'))
 app.use(express.urlencoded({
     limit: "16kb"
 }))
+
+generateTemplateSeedFile();
 
 app.use(cookieParser())
 
