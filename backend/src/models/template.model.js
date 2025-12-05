@@ -23,7 +23,7 @@ const templateSchema = new mongoose.Schema({
     },
     textRegions: [
         {
-            name: { type: String, enum: ['Top', 'Bottom', 'Left', 'Right', 'Custom'], required: true },
+            name: { type: String, required: true },
             x: { type: Number, default: 0 },
             y: { type: Number, default: 0 },
             width: { type: Number, default: 100 },
