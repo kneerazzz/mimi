@@ -1,8 +1,8 @@
-import { UserTemplate } from "../models/user.template.model";
-import { ApiError } from "../utils/apiError";
-import { ApiResponse } from "../utils/apiResponse";
-import { asyncHandler } from "../utils/asyncHandler";
-import uploadOnCloudinary from "../utils/fileUpload";
+import { UserTemplate } from "../models/user.template.model.js";
+import { ApiError } from "../utils/apiError.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import uploadOnCloudinary from "../utils/fileUpload.js";
 import { Template } from "../models/template.model.js";
 
 const uploadTemplate = asyncHandler(async(req, res) => {
@@ -22,7 +22,7 @@ const uploadTemplate = asyncHandler(async(req, res) => {
     const template = await UserTemplate.create({
         submittedBy: user,
         imageUrl: imageUrl.url,
-        name: name,
+        name: user.username || name,
         status: "approved"
     })
     if(!template){
@@ -31,7 +31,7 @@ const uploadTemplate = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, { template }, "User template uploaded successfully!")
+        new ApiResponse(200, { template: template.toObject() }, "User template uploaded successfully!")
     )
 })
 
@@ -40,8 +40,8 @@ const getSingleUserTemplate = asyncHandler(async(req, res) => {
     if(!templateId){
         throw new ApiError(400, "Template id required")
     }
-    const template = UserTemplate.findOne({
-        templateId: templateId,
+    const template = await UserTemplate.findOne({
+        templateId,
         submittedBy: req.user._id
     })
     if(!template){
@@ -50,7 +50,7 @@ const getSingleUserTemplate = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, { template }, "User Template fetched successfully")
+        new ApiResponse(200, { template: template.toObject() }, "User Template fetched successfully")
     )
 })
 
@@ -68,7 +68,7 @@ const getAllUserTemplates = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, { templates }, "All user templates fetched successfully")
+        new ApiResponse(200, { templates: templates }, "All user templates fetched successfully")
     )
 })
 
@@ -78,7 +78,7 @@ const getSingleTemplate = asyncHandler(async(req, res) => {
         throw new ApiError(400, "give template id gng")
     }
     const template = await Template.findOne({
-        templateId: templateId
+        templateId
     })
     if(!template){
         throw new ApiError(500, "Error getting template")
@@ -86,7 +86,7 @@ const getSingleTemplate = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, { template }, "Template fetched successfully!")
+        new ApiResponse(200, { template: template.toObject() }, "Template fetched successfully!")
     )
 })
 
