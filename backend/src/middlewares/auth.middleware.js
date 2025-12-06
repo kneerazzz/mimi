@@ -16,10 +16,11 @@ export const verifyJwt = asyncHandler(async(req, res, next) => {
         const decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET);
         const user = await User.findById(decodedToken?.id);
         if(!user){
-            console.warn(`JWT found for non-existent user ID: ${userId}`);
+            console.warn(`JWT found for non-existent user ID: ${user._id}`);
             return next()
         }
         req.user = user;
+        user.is_registered = true;
 
         next();
     } catch (error) {

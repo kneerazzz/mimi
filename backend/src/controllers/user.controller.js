@@ -218,7 +218,7 @@ const updateUserDetails = asyncHandler(async(req, res) => {
     )
 })
 const updateProfilePic = asyncHandler(async(req, res) => {
-    const profilePicLocalPath = req.files?.path;
+    const profilePicLocalPath = req.file?.path;
     if(!profilePicLocalPath){
         throw new ApiError(400, "Bad request")
     }
