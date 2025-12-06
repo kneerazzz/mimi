@@ -5,8 +5,8 @@ import path from 'path';
 
 // --- CONFIGURATION ---
 // You MUST set this to the folder path where you uploaded your 1500+ templates
-const CLOUDINARY_TEMPLATE_FOLDER = 'mimi/'; 
-const OUTPUT_FILE_PATH = path.resolve('./src/db/seeders/templates.data.js'); 
+const CLOUDINARY_TEMPLATE_FOLDER = 'reactions/Sweat-Run-Away'; 
+const OUTPUT_FILE_PATH = path.resolve('./src/db/seeders/reactions/sweat_run_away.data.js'); 
 // -----------------------
 
 // Helper function to capitalize the first letter of a string
@@ -38,21 +38,20 @@ const generateTemplateSeedFile = async () => {
                 .split('-') // Split by dash/hyphen
                 .map(word => capitalize(word))
                 .join(' ');
-
+            
             return {
                 // Use UUID as the stable, unique template ID
                 templateId: templateUUID, 
                 
                 // CRITICAL DATA
                 imageUrl: asset.imageUrl,
-                name: cleanedName,
+                name: cleanedName.slice(0, Math.max(0, cleanedName.length-7)),
                 
                 // DATA TO BE FILLED MANUALLY LATER
                 emotionTags: [],      // Empty, pending future AI tagging
                 textRegions: [],      // Empty, pending manual definition (e.g., Top/Bottom coords)
                 
-                // STATIC DEFAULTS
-                category: 'Reaction', 
+                // STATIC DEFAULTS, 
                 requiresAdvancedEditor: false,
                 isUserSubmitted: true, // Assuming this is from your bulk user upload
             };

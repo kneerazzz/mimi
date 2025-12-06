@@ -16,7 +16,16 @@ const templateSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    tags: {
+    category: {
+        type: String,
+        required: true,
+        default: "Other",
+    },
+    subCategory: {
+        type: String,
+        default: "General",
+    },
+    emotionTags: {
         type: [String],
         index: true,
         default: []

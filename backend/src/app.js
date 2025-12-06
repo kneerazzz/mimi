@@ -5,6 +5,7 @@ import corn from 'node-cron'
 import { cacheMemeFeed } from './controllers/meme.controller.js'
 import generateTemplateSeedFile from './config/generate_template_seed.js'
 import handelNewVisitor from './middlewares/handleNewVisitor.middleware.js'
+import runTemplateSeeder from './db/seed.js'
 const app = express()
 
 app.use(cors({
@@ -23,7 +24,7 @@ app.use(express.urlencoded({
     limit: "16kb"
 }))
 
-generateTemplateSeedFile();
+runTemplateSeeder();
 
 app.use(cookieParser())
 

@@ -1,59 +1,63 @@
+// cloudinary.util.js
 import cloudinary from 'cloudinary';
 import { ApiError } from './apiError.js';
-import dotenv from 'dotenv'
-import { CLOUDINARY_API_SECRET, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY } from "../config/env.js"
-dotenv.config({
-    path: './.env'
-})
-// --- CLOUDINARY CONFIGURATION ---
-// NOTE: Ensure your .env has CLOUDINARY_CLOUD_NAME, API_KEY, and API_SECRET
-cloudinary.config({
-    cloud_name: CLOUDINARY_CLOUD_NAME,
-    api_key: CLOUDINARY_API_KEY,
-    api_secret: CLOUDINARY_API_SECRET
-});
 
-/*
- * NEW FUNCTION: Lists all assets in a specific folder and extracts their data.
- * @param {string} folderPath - The path to the folder where templates were uploaded (e.g., 'meme_templates').
- * @returns {Promise<Array<{templateId: string, imageUrl: string, emotionTags: string[]}>>} - Array of simplified template data.
- */
-const getTemplatesForSeeding = async (folderPath) => {
-    if (!folderPath) {
-        throw new ApiError(400, "Cloudinary folder path is required for listing assets.");
-    }
-    try {
-        // Use the Admin API to list resources in the folder
-        const resources = await cloudinary.v2.api.resources({
-            type: 'upload',
-            prefix: folderPath, // Only look for assets starting with this path (the folder)
-            max_results: 500, // Fetch up to 500 per call, can be paginated if needed
-            // Include tags because the MediaFlow would have set them here
-            tags: true,
-        });
-
-        // Map the results to the exact structure needed for your MongoDB seeding script
-        const templateData = resources.resources.map(asset => ({
-            // templateId is the public_id, removing the folder prefix for a cleaner slug
-            templateId: asset.public_id.replace(`${folderPath}/`, ''), 
-            imageUrl: asset.secure_url, // Use the secure HTTPS URL
-            name: asset.public_id.split('/').pop().replace(/[-_]/g, ' '), // Cleaned name
-            emotionTags: asset.tags || [], // Auto-generated tags
-            
-            // You will manually add textRegions in the final seed data
-            textRegions: [],
-            category: 'Reaction', // Default category
-            isUserSubmitted: false, 
-        }));
-
-        console.log(`Successfully retrieved ${templateData.length} template assets from Cloudinary.`);
-        return templateData;
-
-    } catch (error) {
-        console.error("Error listing resources from Cloudinary:", error.message);
-        throw new ApiError(500, "Failed to connect to Cloudinary Admin API to list templates.");
-    }
+const normalizeFolderPath = (folderPath) => {
+  return folderPath.replace(/^\/+|\/+$/g, '').trim();
 };
 
+const getTemplatesForSeeding = async (folderPath) => {
+  if (!folderPath) throw new ApiError(400, "Cloudinary folder path is required.");
+
+  const normalized = normalizeFolderPath(folderPath);
+
+  try {
+    let allResources = [];
+    let nextCursor = null;
+    let page = 0;
+
+    do {
+      page++;
+
+      console.log(
+        `Cloudinary Search: fetching page ${page} for folder "${normalized}" next_cursor=${nextCursor}`
+      );
+
+      const res = await cloudinary.v2.search
+        .expression(`folder:${normalized}`)
+        .sort_by('public_id', 'asc')
+        .max_results(500)
+        .next_cursor(nextCursor)     // ⬅️ THIS is how pagination actually works
+        .execute();
+
+      if (!res || !res.resources) break;
+
+      allResources.push(...res.resources);
+
+      nextCursor = res.next_cursor || null;
+
+    } while (nextCursor);
+
+    if (allResources.length === 0) {
+      console.warn(`No assets found in Cloudinary folder: "${normalized}"`);
+      return [];
+    }
+
+    const templateData = allResources.map(asset => ({
+      templateId: asset.public_id.replace(`${normalized}/`, ''),
+      public_id: asset.public_id,
+      imageUrl: asset.secure_url || asset.url,
+      name: asset.public_id.split('/').pop().replace(/[-_]/g, ' '),
+      emotionTags: asset.tags || []
+    }));
+
+    console.log(`Retrieved ${templateData.length} assets from "${normalized}".`);
+    return templateData;
+
+  } catch (err) {
+    console.error("Cloudinary list error:", err);
+    throw new ApiError(500, `Failed to list resources: ${err.message}`);
+  }
+};
 
 export { getTemplatesForSeeding };
