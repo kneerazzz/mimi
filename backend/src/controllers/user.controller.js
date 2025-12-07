@@ -6,7 +6,12 @@ import jwt from 'jsonwebtoken';
 import uploadOnCloudinary from '../utils/fileUpload.js';
 import deleteFromCloudinary from '../utils/fileDelete.js';
 import { REFRESH_TOKEN_SECRET } from '../config/env.js';
-
+import { Like } from '../models/like.model.js'
+import { SavedMeme } from '../models/savedMeme.model.js';
+import { Comment } from "../models/comment.model.js"
+import { SavedTemplate } from '../models/savedTemplate.model.js';
+import { CreatedMeme } from '../models/createdMeme.model.js';
+import { UserTemplate } from '../models/user.template.model.js'
 const generateAccessAndRefreshTokens = async(userId) => {
     try{
         const user = await User.findById(userId);
@@ -289,6 +294,48 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
     }
 })
 
+const deleteUser = asyncHandler(async(req, res) => {
+    const user = req.user;
+    if(!user || !user.is_registered){
+        throw new ApiError(401, "Unauthorised access!")
+    }
+    const { username , password } = req.body;
+    if(!username || !password ){
+        throw new ApiError(400, "Username and Password required to Delete Account")
+    }
+    if(username !== user.username){
+        throw new ApiError(401, "Invalid credentials. Username doesn't match the loggedIn user")
+    }
+    const isPasswordCorrect = await user.isPasswordCorrect(password);
+    if(!isPasswordCorrect){
+        throw new ApiError(401, "Invalid credentials. Password is incorrect")
+    }
+    await Promise.all([
+        await Like.deleteMany({user: user._id}),
+        await Comment.deleteMany({user: user._id}),
+        await SavedMeme.deleteMany({user: user._id}),
+        await SavedTemplate.deleteMany({user: user._id}),
+        await CreatedMeme.deleteMany({creator: user._id}),
+        await UserTemplate.deleteMany({submittedBy: user._id})
+    ]);
+    const deletedUserResult = await User.deleteOne({ _id: user._id });
+    if(deletedUserResult.deletedCount === 0){
+        throw new ApiError(500, "Account deletion failed in database")
+    }
+    const options = {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none"
+    }
+    return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(
+        new ApiResponse(200, {}, "User account deleted Successfully1")
+    )
+})
+
 
 export {
     registerUser,
@@ -298,5 +345,6 @@ export {
     updateUserDetails,
     updateProfilePic,
     refreshAccessToken,
-    getUserDetails
+    getUserDetails,
+    deleteUser
 }
