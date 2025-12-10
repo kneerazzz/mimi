@@ -183,8 +183,8 @@ const getMemeDetails = asyncHandler(async(req, res) => {
 
     // 1. Fetch interaction stats and comments
     const [likeCount, comments] = await Promise.all([
-        Like.countDocuments({contentId: finalContentId, contentType: finalContentType}),
-        Comment.find({contentId: finalContentId, contentType: finalContentType})
+        Like.countDocuments({contentId: finalContentId, contentType: "CreatedMeme"}),
+        Comment.find({contentId: finalContentId, contentType: "CreatedMeme"})
                 .populate({path: 'user', select: 'username profilePic is_registered'})
                 .sort({ createdAt: 1 })
     ])
@@ -192,8 +192,8 @@ const getMemeDetails = asyncHandler(async(req, res) => {
     let isSaved = false;
     if(currentUser && currentUser.is_registered){
         [isLiked, isSaved] = await Promise.all([
-            Like.exists({user: currentUser._id, contentId: finalContentId, contentType: finalContentType}),
-            SavedMeme.exists({user: currentUser._id, contentId: finalContentId, contentType: finalContentType})
+            Like.findOne({user: currentUser._id, contentId: finalContentId, contentType: "CreatedMeme"}),
+            SavedMeme.findOne({user: currentUser._id, contentId: finalContentId, contentType: "CreatedMeme"})
         ])
     }
 

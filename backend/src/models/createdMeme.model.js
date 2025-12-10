@@ -20,11 +20,9 @@ const createdMemeSchema = new mongoose.Schema({
     },
     originalFeedPostId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "MemeFeedPost",
-        index: true,
-        sparse: true,
         unique: true,
-        default: null
+        sparse: true,
+        ref: "MemeFeedPost"
     },
     clonedContentUrl: {
         type: String,
@@ -36,7 +34,9 @@ const createdMemeSchema = new mongoose.Schema({
         type: String
     },
     originalRedditId: {
-        type: String
+        type: String,
+        unique: true,
+        sparse: true
     },
     clonedOriginalScore: {
         type: Number,

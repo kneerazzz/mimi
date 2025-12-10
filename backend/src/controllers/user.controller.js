@@ -93,7 +93,8 @@ const loginUser = asyncHandler(async(req, res) => {
         throw new ApiError(400, "All fields are required!")
     }
     const user = await User.findOne({
-        $or: [{ username }, { email }, {is_registered: true}]
+        $or: [{ username }, { email }],
+        is_registered: true
     })
     if(!user){
         throw new ApiError(409, "User with this username or email doesn't exist")
@@ -181,7 +182,7 @@ const updateUserPassword = asyncHandler(async(req, res) => {
     const updatedUser = await User.findById(user._id).select("-password -refreshToken")
     return res
     .status(200)
-    .json(200, {user: updatedUser}, "Password changed successfully")
+    .json(new ApiResponse(200, {user: updatedUser}, "Password changed successfully"))
 })
 
 const updateUserDetails = asyncHandler(async(req, res) => {
@@ -263,15 +264,12 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
         if(!user){
             throw new ApiError(401, "Invalid refresh token")
         }
-        if(incomingRefreshToken !== user.refreshToken){
-            throw new ApiError(401, "Refresh token is expired or used!")
-        }
         const options = {
             httpOnly: true,
             secure: true,
             sameSite: "none"
         }
-        const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id)
         user.refreshToken = refreshToken
 
         await user.save({validateBeforeSave: true})

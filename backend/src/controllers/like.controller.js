@@ -69,7 +69,7 @@ const toggleLike = asyncHandler(async(req, res) => {
     }
     else {
         await Like.create(likesFilter)
-        message = "Liked successfully";
+        message = 'Liked successfully';
         isLiked = true;
     }
     const newLikesCount = await Like.countDocuments({

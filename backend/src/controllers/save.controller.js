@@ -49,14 +49,14 @@ const toggleSave = asyncHandler(async(req, res) => {
     if(contentType === "MemeFeedPost"){
         const result = await getOrCreatePermanentMeme(contentId);
         finalContentId = result.finalContentId;
-        finalContentType = result.finalContentType;
+        finalContentType = "CreatedMeme";
     } else if(!["CreatedMeme"].includes(contentType)){
         throw new ApiError(400, "Invalid content type for saving")
     }
     const savingFilter = {
         user: user._id,
         contentId: finalContentId,
-        contentType: finalContentType
+        contentType: "CreatedMeme"
     }
     let message, isSaved;
     const existingSave = await SavedMeme.findOne(savingFilter);
@@ -73,7 +73,7 @@ const toggleSave = asyncHandler(async(req, res) => {
     return res
     .status(200)
     .json(
-        new ApiResponse(200, {isSaved, contentId: finalContentId, contentType: finalContentType}, message)
+        new ApiResponse(200, {isSaved, contentId: finalContentId, contentType: "CreatedMeme"}, message)
     )
 })
 

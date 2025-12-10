@@ -6,6 +6,7 @@ const memeFeedPostSchema = new mongoose.Schema({
     redditPostId: {
         type: String,
         unique: true,
+        sparse: true,
         required: true
     },
     contentUrl: {

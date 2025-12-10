@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addComment, deleteComment, getAllComments, updateComment } from "../controllers/comment.controller.js";
+import { addComment, deleteComment, getAllComments, getCommentReplies, updateComment } from "../controllers/comment.controller.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 
 const router = Router();
@@ -21,6 +21,11 @@ router.route("/delete-comment/:commentId").delete(
 router.route("/get-all-comments/:contentId/:contentType").get(
     verifyJwt,
     getAllComments
+)
+
+router.route("/get-comment-replies/:parentCommentId").get(
+    verifyJwt,
+    getCommentReplies
 )
 
 export default router;

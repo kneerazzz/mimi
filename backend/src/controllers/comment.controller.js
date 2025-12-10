@@ -8,7 +8,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const getOrCreatePermanentMeme = async(contentId) => {
     const temporaryMeme = await MemeFeedPost.findById(contentId);
     if(!temporaryMeme){
-        throw new ApiError(404, "Meme not avaliable for save!")
+        throw new ApiError(404, "Meme not avaliable for comment!")
     }
     let permanentMeme = await CreatedMeme.findOne({
         originalRedditId: temporaryMeme.redditPostId
@@ -39,11 +39,11 @@ const addComment = asyncHandler(async(req, res) => {
     if(!user || !user.is_registered){
         throw new ApiError(401, "Login required!")
     }
-    const {content} = req.body;
+    const {content, parentCommentId} = req.body;
     if(!content || content === ""){
         throw new ApiError(400, "Content can't be empty!")
     }
-    const {contentId, contentType, parentCommentId} = req.params;
+    const {contentId, contentType} = req.params;
     if(!contentId || !contentType){
         throw new ApiError(400, "ContentId or contentType missing!")
     }
@@ -61,7 +61,7 @@ const addComment = asyncHandler(async(req, res) => {
     else if(contentType === "MemeFeedPost"){
         const result = await getOrCreatePermanentMeme(contentId);
         finalContentId = result.finalContentId;
-        finalContentType = result.finalContentType;
+        finalContentType = "CreatedMeme";
     }
     else if(!["CreatedMeme"].includes(contentType)){
         throw new ApiError(400, "Invalid content type for comment")
@@ -77,17 +77,18 @@ const addComment = asyncHandler(async(req, res) => {
     if(!comment){
         throw new ApiError(500, "Comment failed to reach database. Kill troyy")
     }
-    const {newCommentCount, fullComment} = await Promise.all([
+    const [newCommentCount, fullComment] = await Promise.all([
         Comment.countDocuments({
             contentId: finalContentId,
-            contentType: finalContentType
+            contentType: "CreatedMeme",
+            parentComment: null
         }),
-        Comment.findById(comment._id).populate({path: "user", populate: "username profilePic"})
+        Comment.findById(comment._id).populate({path: "user", select: "username profilePic"})
     ])
     return res
     .status(200)
     .json(
-        new ApiResponse(200, {fullComment, newCommentCount, contentId: finalContentId, contentType: finalContentType})
+        new ApiResponse(200, {comment: fullComment, newCommentCount, contentId: finalContentId, contentType: finalContentType}, "Comment added successfully")
     )
 })
 
@@ -106,24 +107,22 @@ const getAllComments = asyncHandler(async(req, res)=> {
     if(contentType === "MemeFeedPost"){
         const result = await getOrCreatePermanentMeme(contentId);
         finalContentId = result.finalContentId;
-        finalContentType = result.finalContentType;
-    } else if(!["Comment", "CreatedMeme"].includes(contentType)){
-        throw new ApiError(400, "Invalid content type for comment")
-    }
+        finalContentType = "CreatedMeme";
+    } else if(contentType === "CreatedMeme"){
 
-    const {content, comments, commentsCount} = await Promise.all([
+    } else {
+        throw new ApiError(400, "Unknown contentType. Bad request")
+    }
+    const [content, comments, commentsCount] = await Promise.all([
         CreatedMeme.findById(finalContentId).select("finalImageUrl clonedTitle clonedAuthor"),
 
-        Comment.find({contentId: finalContentId, contentType: finalContentType, parentComment: null})
+        Comment.find({contentId: finalContentId, contentType: "CreatedMeme", parentComment: null})
             .populate({path: "user", select: "profilePic username"}),
         
-        Comment.countDocuments({contentId: finalContentId, contentType: finalContentType})
+        Comment.countDocuments({contentId: finalContentId, contentType: "CreatedMeme", parentComment: null})
     ])
-    if(!content){
-        throw new ApiError(404, "Content of comments not found")
-    }
     const commentDetails = {
-        memeContext: content.toObject(),
+        memeContext: content,
         comments: comments,
         commentsCount: commentsCount
     }
@@ -134,9 +133,30 @@ const getAllComments = asyncHandler(async(req, res)=> {
     )
 })
 
+const getCommentReplies = asyncHandler(async(req, res) => {
+    const { parentCommentId } = req.params;
+    if(!parentCommentId){
+        throw new ApiError(400, "Bad request. ParentCommentId required!")
+    }
+    const [replies, repliesCount] = await Promise.all([
+        Comment.find({parentComment: parentCommentId})
+        .populate({path: 'user', select: "profilePic username"})
+        .sort({createdAt: 1}),
+
+        Comment.countDocuments({parentComment: parentCommentId})
+    ])
+    const plainReplies = replies.map(r => r.toObject());
+    
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, { plainReplies, repliesCount }, "Comment replies fetched successfully!")
+    )
+})
+
 const updateComment = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user){
+    if(!user || !user.is_registered){
         throw new ApiError(401, "Login required")
     }
     const { commentId } = req.params;
@@ -201,5 +221,6 @@ export {
     addComment,
     getAllComments,
     updateComment,
-    deleteComment
+    deleteComment,
+    getCommentReplies
 }

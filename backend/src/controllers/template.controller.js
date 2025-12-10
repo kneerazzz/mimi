@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import uploadOnCloudinary from "../utils/fileUpload.js";
 import { Template } from "../models/template.model.js";
+import { SavedTemplate } from "../models/savedTemplate.model.js";
 
 const uploadTemplate = asyncHandler(async(req, res) => {
     const user = req.user;
@@ -83,10 +84,18 @@ const getSingleTemplate = asyncHandler(async(req, res) => {
     if(!template){
         throw new ApiError(500, "Error getting template")
     }
+    let isSaved = false;
+    const savedTemplate = await SavedTemplate.exists({
+        template: template._id,
+        user: req.user?._id
+    })
+    if(savedTemplate){
+        isSaved = true
+    }
     return res
     .status(200)
     .json(
-        new ApiResponse(200, { template: template.toObject() }, "Template fetched successfully!")
+        new ApiResponse(200, { template: template.toObject(), isSaved }, "Template fetched successfully!")
     )
 })
 

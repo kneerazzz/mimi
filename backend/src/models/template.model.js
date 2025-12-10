@@ -5,7 +5,9 @@ const templateSchema = new mongoose.Schema({
     templateId: {
         type: String,
         unique: true,
+        index: true,
         trim: true,
+        sparse: true,
         requied: true
     },
     imageUrl: {

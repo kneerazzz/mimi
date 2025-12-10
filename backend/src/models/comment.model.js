@@ -7,7 +7,7 @@ const commentSchema = new mongoose.Schema({
     },
     contentType: {
         type: String,
-        enum: ["MemeFeedPost", "CreatedMeme"],
+        enum: ["MemeFeedPost", "CreatedMeme", "Comment"],
         required: true
     },
     content: {
@@ -27,6 +27,6 @@ const commentSchema = new mongoose.Schema({
     timestamps: true
 })
 
-commentSchema.index({user: 1, contentType: 1, contentId: 1}, {unique: true})
+commentSchema.index({user: 1, contentType: 1, contentId: 1})
 
 export const Comment = mongoose.model("Comment", commentSchema)
