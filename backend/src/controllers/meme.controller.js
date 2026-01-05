@@ -8,6 +8,8 @@ import { Like } from "../models/like.model.js"
 import { SavedMeme } from "../models/savedMeme.model.js";
 import { Comment } from "../models/comment.model.js"; 
 
+
+const MAX_MEMES = 2000;
 /**
  * Helper function to determine if a user has interacted with a temporary post, 
  * considering its permanent clone (CreatedMeme) record.
@@ -83,7 +85,7 @@ const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") =
 
 const cacheMemeFeed = async() => {
     try {
-        const freshMemes = await fetchMemeFeedFromReddit(300);
+        const freshMemes = await fetchMemeFeedFromReddit(150);
         
         if(freshMemes.length === 0){
             console.warn("Meme Feed Cache: Fetched zero valid memes.");
@@ -109,12 +111,32 @@ const cacheMemeFeed = async() => {
 }
 
 const ensureMemeFeedNotEmpty = async() => {
-    const count = MemeFeedPost.countDocuments();
+    const count = await MemeFeedPost.countDocuments();
 
     if(count === 0){
         console.log("running cacheMemeFeed to restore memes")
         await cacheMemeFeed();
+        return;
     }
+    
+    if(count > MAX_MEMES){
+        console.log("Meme overflow: starting genocide of memes")
+        await trimMemeCollection();
+    }
+};
+
+const trimMemeCollection = async () => {
+    const total = await MemeFeedPost.countDocuments();
+    const excess = total - MAX_MEMES;
+
+    if (excess <= 0) return;
+
+    await MemeFeedPost.find()
+        .sort({ createdAt: 1 }) // oldest first
+        .limit(excess)
+        .deleteMany();
+
+    console.log(`Trimmed ${excess} old memes`);
 };
 
 const getHomeFeed = asyncHandler(async(req, res) => {

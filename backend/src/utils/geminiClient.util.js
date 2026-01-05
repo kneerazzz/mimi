@@ -3,10 +3,7 @@ import { ApiError } from './apiError.js'; // Assuming this is defined and import
 
 import { GEMINI_API_KEY, GEMINI_API_URL } from '../config/env.js';
 
-const GEMINI_API_KEY = GEMINI_API_KEY;
-// Use the recommended model URL if GEMINI_API_URL is not provided
-const GEMINI_API_URL = GEMINI_API_URL || "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
-const MAX_REQUESTS_PER_MINUTE = 5;
+const MAX_REQUESTS_PER_MINUTE = 100;
 const WINDOW_MS = 60000; // 60 seconds
 
 

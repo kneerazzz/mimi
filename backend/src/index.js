@@ -5,7 +5,7 @@ import { PORT } from "./config/env.js";
 import { cacheMemeFeed, ensureMemeFeedNotEmpty } from "./controllers/meme.controller.js";
 
 connectDB()
-.then(() => {
+.then(async () => {
     app.get("/", (req, res) => {
         res.send("<h1>mimi server is running wohohohho</h1>")
     })
@@ -14,11 +14,14 @@ connectDB()
         res.send("<h2>yo its actually working</h2>")
     })
     
-        
+    await cacheMemeFeed();
+    await ensureMemeFeedNotEmpty()
+
     cron.schedule("0 */2 * * *", async () => {
         console.log("CRON: Refreshing meme cache...");
         try {
             await cacheMemeFeed()
+            await ensureMemeFeedNotEmpty();
         } catch (error) {
             console.log("Cron error : ", error)
         }

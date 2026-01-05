@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-const TTL_SECONDS = 86400;
-
 const memeFeedPostSchema = new mongoose.Schema({
     redditPostId: {
         type: String,
@@ -35,10 +33,6 @@ const memeFeedPostSchema = new mongoose.Schema({
 }, {timestamps: true})
 
 
-
-memeFeedPostSchema.index({
-    lastCachedAt: 1
-}, {expireAfterSeconds: TTL_SECONDS})
 
 
 export const MemeFeedPost = mongoose.model("MemeFeedPost", memeFeedPostSchema)

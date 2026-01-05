@@ -1,7 +1,6 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-import corn from 'node-cron'
 import handelNewVisitor from './middlewares/handleNewVisitor.middleware.js'
 const app = express()
 
@@ -14,7 +13,6 @@ app.use(cors({
 app.use(express.json({
     limit: "16kb"
 }))
-
 app.use(express.static('public'))
 
 app.use(express.urlencoded({
@@ -26,10 +24,6 @@ app.use(cookieParser())
 
 app.use(handelNewVisitor)
 
-corn.schedule(" 0 * * * * ", () => {
-    console.log("caching memes from reddit werarara")
-    cacheMemeFeed()
-})
 
 import userRouter from './routes/user.routes.js'
 import memeRouter from './routes/Meme.routes.js'
