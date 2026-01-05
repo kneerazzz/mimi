@@ -99,6 +99,7 @@ const getSingleTemplate = asyncHandler(async(req, res) => {
     )
 })
 
+
 const getTemplatesByCategory = asyncHandler(async(req, res) => {
     const { category, subCategory, page = 1, limit = 40 } = req.query;
     

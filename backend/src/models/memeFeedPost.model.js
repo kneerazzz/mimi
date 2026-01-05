@@ -35,6 +35,7 @@ const memeFeedPostSchema = new mongoose.Schema({
 }, {timestamps: true})
 
 
+
 memeFeedPostSchema.index({
     lastCachedAt: 1
 }, {expireAfterSeconds: TTL_SECONDS})

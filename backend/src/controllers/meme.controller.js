@@ -83,7 +83,7 @@ const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") =
 
 const cacheMemeFeed = async() => {
     try {
-        const freshMemes = await fetchMemeFeedFromReddit(100);
+        const freshMemes = await fetchMemeFeedFromReddit(300);
         
         if(freshMemes.length === 0){
             console.warn("Meme Feed Cache: Fetched zero valid memes.");
@@ -107,6 +107,15 @@ const cacheMemeFeed = async() => {
         console.error("CRITICAL MongoDB Error during bulk caching:", error);
     }
 }
+
+const ensureMemeFeedNotEmpty = async() => {
+    const count = MemeFeedPost.countDocuments();
+
+    if(count === 0){
+        console.log("running cacheMemeFeed to restore memes")
+        await cacheMemeFeed();
+    }
+};
 
 const getHomeFeed = asyncHandler(async(req, res) => {
     const {page = 1, limit = 20} = req.query;
@@ -240,4 +249,5 @@ export {
     cacheMemeFeed,
     getHomeFeed,
     getMemeDetails,
+    ensureMemeFeedNotEmpty
 }

@@ -34,7 +34,7 @@ const processRedditData = (children) => {
  * @param {number} limit - The number of posts to fetch.
  * @returns {Array} - An array of cleaned meme post objects.
  */
-const fetchMemeFeedFromReddit = async (limit = 100) => {
+const fetchMemeFeedFromReddit = async (limit = 300) => {
     const url = `${REDDIT_BASE_URL}/r/${SUBREDDIT}/hot.json?limit=${limit}`;
 
     try {
