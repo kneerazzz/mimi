@@ -1,9 +1,11 @@
-import { ApiError } from "../utils/apiError";
-import { asyncHandler } from "../utils/asyncHandler";
-import { generateMemeContext } from "../utils/geminiResponse";
-import { Template } from "../models/template.model";
-import { CreatedMeme } from "../models/createdMeme.model";
-import { ApiResponse } from "../utils/apiResponse";
+import { ApiError } from "../utils/apiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { generateMemeContext } from "../utils/geminiResponse.js";
+import { Template } from "../models/template.model.js";
+import { CreatedMeme } from "../models/createdMeme.model.js";
+import { ApiResponse } from "../utils/apiResponse.js";
+
+
 const previewMeme = asyncHandler(async(req, res) => {
     const { context } = req.body;
     const user = req.user;
@@ -23,6 +25,9 @@ const previewMeme = asyncHandler(async(req, res) => {
         throw new ApiError(404, "No templates found for this context!")
     }
 
+    const allowedPositions = ["Top", "Left", "Right", "Bottom", "Custom"];
+
+
     const previews = templates.map(template => {
         const hasRegions =
             Array.isArray(template.textRegions) &&
@@ -30,7 +35,7 @@ const previewMeme = asyncHandler(async(req, res) => {
         const textLayers = hasRegions
             ? template.textRegions.map(region => ({
                 text: caption,
-                position: region.position,
+                position: allowedPositions.includes(region.position) ? region.position : "Custom",
                 size: region.size || 24,
                 fontColor: region.fontColor || "#FFFFFF",
                 strokeColor: region.strokeColor || "#000000",
@@ -64,7 +69,13 @@ const previewMeme = asyncHandler(async(req, res) => {
     return {
         templateId: template._id,
         templateUrl: template.imageUrl,
-        textLayers
+        textLayers,
+        constraints: {
+            x: [0, 100],
+            y: [0, 100],
+            size: [10, 100],
+            layerWidth: [10, 100]
+        }
     };
     });
 
@@ -98,7 +109,7 @@ const createMemeWithAI = asyncHandler(async(req, res) => {
     if (!Array.isArray(textLayers) || textLayers.length === 0) {
         throw new ApiError(400, "textLayers required");
     }
-    const safeTags = Array.isArray(tags) ? tags.map(t => t.toLowerCase) : [];
+    const safeTags = Array.isArray(tags) ? tags.map(t => String(t).toLowerCase()) : [];
     const template = await Template.findById(templateId)
     if(!template){
         throw new ApiError(404, "Template Not found")
@@ -140,7 +151,10 @@ const createMemeManually = asyncHandler(async(req, res) => {
         throw new ApiError(401, "User required")
     }
     const {finalImageUrl, templateId, textLayers, tags} = req.body;
-
+    const template = await Template.findById(templateId);
+    if(!template){
+        throw new ApiError(404, "Template not found")
+    }
     if(!finalImageUrl) {
         throw new ApiError(400, "finalImageUrl required")
     }
@@ -157,7 +171,7 @@ const createMemeManually = asyncHandler(async(req, res) => {
         layerWidth: clamp(layer.layerWidth ?? 90, 10, 100),
     }));
 
-    const safeTags = Array.isArray(tags) ? tags.map(t => t.toLowerCase()) : [];
+    const safeTags = Array.isArray(tags) ? tags.map(t => String(t).toLowerCase()) : [];
     const meme = await CreatedMeme.create({
         creator: user._id,
         template: templateId,
@@ -175,7 +189,6 @@ const createMemeManually = asyncHandler(async(req, res) => {
         )
     )
 })
-
 
 export {
     previewMeme,
