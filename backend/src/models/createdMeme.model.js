@@ -69,14 +69,19 @@ const createdMemeSchema = new mongoose.Schema({
             textAlign: { type: String, enum: ['left', 'center', 'right'], default: 'center' },
             isBold: { type: Boolean, default: true },
             isItalic: { type: Boolean, default: false },
-            lineHeight: { type: Number, default: 1.2 },
+            lineHeight: { type: Number, default: 1.2, min: 0.5, max: 3 },
             
             // Custom positioning (Advanced Editor) - Normalized coordinates
-            x: { type: Number, default: 50 }, // 0 to 100
-            y: { type: Number, default: 10 }, // 0 to 100
-            layerWidth: { type: Number, default: 90 }, // 0 to 100
+            x: { type: Number, default: 50, min: 0, max: 100 }, // 0 to 100
+            y: { type: Number, default: 10, min: 0, max: 100 }, // 0 to 100
+            layerWidth: { type: Number, default: 90, min: 10, max: 100 }, // 0 to 100
         }
     ],
+    tags: [{
+        type: String,
+        lowercase: true,
+        trim: true
+    }],
     originalScenario: {
         type: String
     }
