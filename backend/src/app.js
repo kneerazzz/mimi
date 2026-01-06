@@ -22,8 +22,6 @@ app.use(express.urlencoded({
 
 app.use(cookieParser())
 
-app.use(handelNewVisitor)
-
 
 
 import userRouter from './routes/user.routes.js'
@@ -35,9 +33,11 @@ import templateRouter from './routes/template.routes.js'
 import savedTemplateRouter from './routes/savedTemplates.routes.js'
 import createRouter from './routes/createMeme.routes.js'
 import { verifyJwt } from './middlewares/auth.middleware.js'
+import handleNewVisitor from './middlewares/handleNewVisitor.middleware.js'
 
 
 app.use("/", verifyJwt)
+app.use("/", handleNewVisitor)
 
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/memes", memeRouter)

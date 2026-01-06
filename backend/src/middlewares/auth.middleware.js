@@ -5,10 +5,9 @@ import { User } from "../models/user.model.js";
 
 export const verifyJwt = async (req, res, next) => {
     try {
-        const token = req.cookies?.accessToken ||
-            req.header("Authorization")?.replace("Bearer ", "").trim();
-
+        const token = req.cookies?.accessToken || (req.headers("Authorization")?.replace("Bearer ", ""))
         if (!token) {
+            console.log("token not found")
             return next(); // anonymous user stays
         }
 
@@ -20,12 +19,13 @@ export const verifyJwt = async (req, res, next) => {
             return next(); // fallback to anonymous user
         }
 
-        const user = await User.findById(decoded.id);
+        const user = await User.findById(decoded._id);
         if (!user) {
-            console.warn("JWT refers to non-existent user:", decoded.id);
+            console.warn("JWT refers to non-existent user:", decoded._id);
             return next(); // fallback to anonymous user
         }
 
+        console.log("verifyjwt success", user.username)
         // Override req.user with the real user
         req.user = user;
         req.user.is_registered = true;

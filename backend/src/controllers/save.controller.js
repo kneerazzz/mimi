@@ -37,7 +37,7 @@ const getOrCreatePermanentMeme = async(contentId) => {
 
 const toggleSave = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user.is_registered){
         throw new ApiError(401, "Login required to save memes")
     }
     const {contentId, contentType} = req.params;
@@ -79,7 +79,7 @@ const toggleSave = asyncHandler(async(req, res) => {
 
 const getAllSavedMemes = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user.is_registered){
         throw new ApiError(401, "Login required gng")
     }
     const memes = await SavedMeme.find({

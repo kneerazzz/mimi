@@ -42,7 +42,6 @@ const fetchMemeFeedFromReddit = async (limit = 200) => {
             headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36'}
         });
         const children = response.data?.data?.children;
-        console.log(children)
         if (!children || children.length === 0) {
             console.warn("Reddit fetch succeeded but returned no posts.");
             return [];

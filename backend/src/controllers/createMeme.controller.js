@@ -12,13 +12,15 @@ const previewMeme = asyncHandler(async(req, res) => {
     if(!context){
         throw new ApiError(400, "Context field can't be empty")
     }
-    if(user.is_registered == false){
+    if(!user.is_registered){
         throw new ApiError(401, "Login required for this feature!")
     }
-    const {tags, caption} = await generateMemeContext(context);
+    const {emotionTags, caption} = await generateMemeContext(context);
 
+    console.log("tags : ", emotionTags)
+    console.log(caption)
     const templates = await Template.find({
-        emotionTags: {$in: tags}
+        emotionTags: {$in: emotionTags}
     }).limit(20)
 
     if(!templates || templates.length === 0){
@@ -86,7 +88,7 @@ const previewMeme = asyncHandler(async(req, res) => {
             200,
             {
                 caption,
-                tags,
+                emotionTags,
                 previews
             },
             "Preview is ready"

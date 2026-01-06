@@ -138,7 +138,7 @@ const logoutUser = asyncHandler(async(req, res) => {
     await User.findByIdAndUpdate(user._id, {
         $unset: {
             refreshToken: 1
-        }
+        },
     }, {
         new: true
     })
@@ -151,6 +151,7 @@ const logoutUser = asyncHandler(async(req, res) => {
     .status(200)
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
+    .clearCookie("visitor_uuid", options)
     .json(
         new ApiResponse(200, {}, "User logout successful!")
     )
@@ -158,7 +159,7 @@ const logoutUser = asyncHandler(async(req, res) => {
 
 const getUserDetails = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user){
+    if(!user.is_registered){
         throw new ApiError(401, "Unauthorised access")
     }
     return res
@@ -294,7 +295,7 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
 
 const deleteUser = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user.is_registered){
         throw new ApiError(401, "Unauthorised access!")
     }
     const { username , password } = req.body;

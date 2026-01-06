@@ -11,6 +11,10 @@ const UUID_COOKIE_OPTIONS = {
 
 const handleNewVisitor = asyncHandler(async(req, res, next) => {
     try {
+
+        if(req.user){
+            return next();
+        }
         let user = null;
         const clientUuid = req.cookies?.visitor_uuid;
         let shouldSetCookie = false;
@@ -28,12 +32,16 @@ const handleNewVisitor = asyncHandler(async(req, res, next) => {
         else if(!clientUuid || user.uuid !== clientUuid){
             shouldSetCookie = true; // FIX: Use assignment operator =
         }
-        if(shouldSetCookie){
+        if(shouldSetCookie && user){
             res.cookie("visitor_uuid", user.uuid, UUID_COOKIE_OPTIONS)
         }
-        
-        // Ensure user is an object for subsequent checks (even if anonymous)
+        if(!user){
+            console.error("Critical error: failed to find or Create a visitor user")
+            throw new ApiError(500, "Error generating visitor session")
+        }
+
         req.user = user; 
+        req.user.is_registered = false
         next();
     } catch (error) {
         console.error("Error creating new visitor account:", error);

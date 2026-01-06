@@ -32,7 +32,7 @@ User scenario:
     rawResponse = await geminiClient(prompt, {
       responseSchema: memeContextSchema,
       temperature: 0.7,
-      maxOutputTokens: 400
+      maxOutputTokens: 8000
     });
   } catch (error) {
     throw error; // already wrapped as ApiError

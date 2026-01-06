@@ -6,12 +6,10 @@ const router = Router()
 
 
 router.route("/homepage").get(
-    verifyJwt,
     getHomeFeed
 )
 
 router.route("/details/:contentId/:contentType").get(
-    verifyJwt,
     getMemeDetails
 )
 

@@ -10,7 +10,7 @@ const toggleSave = asyncHandler(async(req, res) => {
         throw new ApiError(400, "template Id required!")
     }
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user.is_registered){
         throw new ApiError(401, "Login required!")
     }
     const saveTemplateFilter = {
@@ -40,7 +40,7 @@ const toggleSave = asyncHandler(async(req, res) => {
 
 const getAllSavedTemplates = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user.is_registered){
         throw new ApiError(401, "Login required!")
     }
     const templates = await SavedTemplate.find({

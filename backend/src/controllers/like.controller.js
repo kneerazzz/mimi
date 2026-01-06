@@ -38,7 +38,7 @@ const getOrCreatePermanentMeme = async(contentId) => {
 
 const toggleLike = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user.is_registered){
         throw new ApiError(401, "Login required")
     }
     const {contentId, contentType} = req.params;
@@ -87,7 +87,7 @@ const toggleLike = asyncHandler(async(req, res) => {
 
 const getAllLikedMemes = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user.is_registered){
         throw new ApiError(401, "Login required!")
     }
     const memes = await Like.find({

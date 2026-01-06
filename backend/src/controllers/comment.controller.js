@@ -36,7 +36,7 @@ const getOrCreatePermanentMeme = async(contentId) => {
 
 const addComment = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user.is_registered){
         throw new ApiError(401, "Login required!")
     }
     const {content, parentCommentId} = req.body;
@@ -94,7 +94,7 @@ const addComment = asyncHandler(async(req, res) => {
 
 const getAllComments = asyncHandler(async(req, res)=> {
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user.is_registered){
         throw new ApiError(401, "Login required!")
     }
     const {contentId, contentType} = req.params;
@@ -156,7 +156,7 @@ const getCommentReplies = asyncHandler(async(req, res) => {
 
 const updateComment = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user || !user.is_registered){
+    if(!user?.is_registered){
         throw new ApiError(401, "Login required")
     }
     const { commentId } = req.params;
