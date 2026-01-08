@@ -27,6 +27,7 @@ const getOrCreatePermanentMeme = async(contentId) => {
         finalImageUrl: temporaryMeme.contentUrl,
         isAIGenerated: false,
         template: null,
+        creator: "692fe332caca25fcecc0f909"
     })
     return {
         finalContentId: permanentMeme._id,
@@ -51,7 +52,10 @@ const addComment = asyncHandler(async(req, res) => {
     let finalContentType = contentType;
     let targetComment = null;
     if(parentCommentId){
-        targetComment = await Comment.findById(parentCommentId);
+        targetComment = await Comment.findOne({
+            _id: parentCommentId,
+            contentId: finalContentId
+        });
         if(!targetComment){
             throw new ApiError(404, "Parent comment not found!")
         }
@@ -97,41 +101,74 @@ const getAllComments = asyncHandler(async(req, res)=> {
     if(!user.is_registered){
         throw new ApiError(401, "Login required!")
     }
-    const {contentId, contentType} = req.params;
+    
+    const { contentId, contentType } = req.params;
     if(!contentId || !contentType){
-        throw new ApiError(400,"Content ID and Type is required!")
+        throw new ApiError(400, "Content ID and Type are required!")
     }
+
     let finalContentId = contentId;
-    let finalContentType = contentType;
+    let memeContextData = null;
 
     if(contentType === "MemeFeedPost"){
-        const result = await getOrCreatePermanentMeme(contentId);
-        finalContentId = result.finalContentId;
-        finalContentType = "CreatedMeme";
-    } else if(contentType === "CreatedMeme"){
+        const feedPost = await MemeFeedPost.findById(contentId);
+        if(!feedPost) {
+            throw new ApiError(404, "Meme Feed Post not found");
+        }
 
+        const existingPermanentMeme = await CreatedMeme.findOne({
+            originalRedditId: feedPost.redditPostId
+        });
+
+        if(existingPermanentMeme) {
+            finalContentId = existingPermanentMeme._id;
+            memeContextData = existingPermanentMeme; 
+        } else {
+            return res.status(200).json(
+                new ApiResponse(200, {
+                    memeContext: feedPost,
+                    comments: [],
+                    commentsCount: 0
+                }, "No comments yet")
+            );
+        }
+    } else if (contentType === "CreatedMeme") {
+        memeContextData = await CreatedMeme.findById(finalContentId);
     } else {
-        throw new ApiError(400, "Unknown contentType. Bad request")
+        throw new ApiError(400, "Unknown contentType. Bad request");
     }
-    const [content, comments, commentsCount] = await Promise.all([
-        CreatedMeme.findById(finalContentId).select("finalImageUrl clonedTitle clonedAuthor"),
 
-        Comment.find({contentId: finalContentId, contentType: "CreatedMeme", parentComment: null})
-            .populate({path: "user", select: "profilePic username"}),
+    const [comments, commentsCount] = await Promise.all([
+        Comment.find({
+            contentId: finalContentId, 
+            contentType: "CreatedMeme", // Comments are always stored as CreatedMeme type
+            parentComment: null
+        })
+        .populate({path: "user", select: "profilePic username"}),
         
-        Comment.countDocuments({contentId: finalContentId, contentType: "CreatedMeme", parentComment: null})
-    ])
+        Comment.countDocuments({
+            contentId: finalContentId, 
+            contentType: "CreatedMeme", 
+            parentComment: null
+        })
+    ]);
+
+    if(!memeContextData) {
+         memeContextData = await CreatedMeme.findById(finalContentId).select("finalImageUrl clonedTitle clonedAuthor");
+    }
+
     const commentDetails = {
-        memeContext: content,
+        memeContext: memeContextData,
         comments: comments,
         commentsCount: commentsCount
-    }
+    };
+
     return res
     .status(200)
     .json(
         new ApiResponse(200, commentDetails, "Comments fetched successfully")
-    )
-})
+    );
+});
 
 const getCommentReplies = asyncHandler(async(req, res) => {
     const { parentCommentId } = req.params;

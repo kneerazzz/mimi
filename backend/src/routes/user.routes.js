@@ -20,7 +20,7 @@ router.route("/update-user-details").patch(
 router.route("/update-user-password").patch(
     updateUserPassword
 )
-router.route("/refresh-access-token").patch(
+router.route("/refresh-access-token").post(
     refreshAccessToken
 )
 router.route("/get-user-details").get(

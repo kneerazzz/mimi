@@ -51,7 +51,7 @@ const toggleLike = asyncHandler(async(req, res) => {
     if(contentType === "MemeFeedPost"){
         const result = await getOrCreatePermanentMeme(contentId);
         finalContentId = result.finalContentId;
-        finalContentType = result.finalContentType; 
+        finalContentType = "CreatedMeme"; 
     } else if(!["Comment", "CreatedMeme"].includes(contentType)){
         throw new ApiError(400, "Invalid content type for liking!")
     }
@@ -74,7 +74,7 @@ const toggleLike = asyncHandler(async(req, res) => {
     }
     const newLikesCount = await Like.countDocuments({
         contentId: finalContentId,
-        contentType: finalContentType
+        contentType: "CreatedMeme"
     })
     return res
     .status(200)

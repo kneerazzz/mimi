@@ -1,11 +1,26 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-import handelNewVisitor from './middlewares/handleNewVisitor.middleware.js'
 const app = express()
 
+
+const allowedOrigins = [
+    "http://localhost:4000",
+    "http://localhost:3000"
+]
+
+
 app.use(cors({
-    origin: 'http://localhost:4000',
+    origin: function (origin, callback) {
+        if(!origin) return callback(null, true);
+
+        if(allowedOrigins.includes(origin)){
+            callback(null, true)
+        }
+        else{
+            callback(new Error("Not allowed by cors"))
+        }
+    },
     credentials: true
 }))
 
