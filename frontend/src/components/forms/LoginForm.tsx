@@ -8,7 +8,6 @@ import { Eye, EyeOff, Mail, Lock, LogIn, User } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 import Image from 'next/image';
 
 const LoginPage: React.FC = () => {
@@ -46,11 +45,9 @@ const LoginPage: React.FC = () => {
             : { username: identifier, password };
 
         await login(payload);
-        toast.success("Login successfull!")
         router.push('/'); 
 
     } catch (err: any) {
-        toast.error(`Login failed: ${err}`)
         const errorMessage = err.response?.data?.message || "Invalid credentials. Please try again.";
         setError(errorMessage);
     } finally {

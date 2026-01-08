@@ -1,8 +1,8 @@
 'use client'
 import React, { createContext, useContext, useState, useEffect} from "react";
 import api from "@/services/api";
+import { getCurrentUser, loginUser, logoutUser, registerUser } from "@/services/authService";
 import { toast } from "sonner";
-
 interface User {
     _id: string;
     uuid: string;
@@ -19,6 +19,7 @@ interface AuthContextType {
     isLoading: boolean;
     login: (data: any) => Promise<void>;
     logout: () => Promise<void>;
+    register: (data: any) => Promise<void>;
     showLoginModal: boolean;
     setShowLoginModal: (show: boolean) => void;
 }
@@ -34,10 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const { data } = await api.get("/users/get-user-details");
-                setUser(data.data.user)
+                const response = await getCurrentUser();
+                setUser(response.data.user)
             } catch (error) {
-                toast.error("Error fetching user!")
+                console.log("Visitor Mode (User not logged In)")
                 setUser(null)
             } finally {
                 setIsLoading(false)
@@ -47,18 +48,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = async (credentials: any) => {
-        const { data } = await api.post("/users/login", credentials);
-        setUser(data.data.user);
+        const response = await loginUser(credentials);
+        setUser(response.data.user);
         setShowLoginModal(false)
+        toast.success(`Welcome Back, ${response.data.user.username}`)
     }
 
     const logout = async () => {
-        await api.post("/users/logout");
+        await logoutUser();
         setUser(null);
         window.location.reload();
     };
+
+    const register = async (credentials: any) => {
+        const response = await registerUser(credentials)
+        setUser(response.data.user);
+        toast.success(`Welcome aboard, ${response.data.user.username}`);
+        setShowLoginModal(false);
+    }
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, logout, showLoginModal, setShowLoginModal}} >
+        <AuthContext.Provider value={{ user, isLoading, login, logout, register, showLoginModal, setShowLoginModal}} >
             { children }
         </AuthContext.Provider>
     )
