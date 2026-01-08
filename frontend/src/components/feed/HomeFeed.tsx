@@ -63,8 +63,7 @@ const HomeFeed: React.FC<HomeFeedProps> = ({ onLoginRequired }) => {
         setIsLoadingMore(true);
       }
       setError(null);
-
-      // TODO: Replace with your actual API endpoint
+      
       const response = await fetch(`/api/memes?page=${pageNum}&limit=20`);
       
       if (!response.ok) {

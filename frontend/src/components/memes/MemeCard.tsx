@@ -23,7 +23,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 // Mock useAuth hook - replace with your actual auth hook
 const useAuth = () => {
-  // Replace this with your actual auth logic
+
   const [isLoggedIn] = useState(false); // Change to true to test logged-in state
   return { isLoggedIn };
 };
