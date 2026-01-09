@@ -1,10 +1,12 @@
-'use client';
 
+'use client'
 import React, { useState, useEffect } from 'react';
 import MemeCard from '../memes/MemeCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, AlertCircle } from 'lucide-react';
+import { getHomeMemes } from '@/services/memeService';
+import { HomePageParams } from '@/types';
 
 interface Meme {
   _id: string;
@@ -55,7 +57,7 @@ const HomeFeed: React.FC<HomeFeedProps> = ({ onLoginRequired }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Fetch memes function
-  const fetchMemes = async (pageNum: number = 1) => {
+  const fetchMemes = async (  pageNum  : number = 1) => {
     try {
       if (pageNum === 1) {
         setIsLoading(true);
@@ -63,14 +65,17 @@ const HomeFeed: React.FC<HomeFeedProps> = ({ onLoginRequired }) => {
         setIsLoadingMore(true);
       }
       setError(null);
+
+      const response = await getHomeMemes(pageNum);
       
-      const response = await fetch(`/api/memes?page=${pageNum}&limit=20`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch memes');
+      if (!response.success) {
+        setError(response.message);
+        throw new Error("Failed to fetch memes");
       }
 
-      const data = await response.json();
+      const feed = response.data.feed;
+      console.log(feed)
+
       
       // Mock data for demonstration
       const mockMemes: Meme[] = Array.from({ length: 10 }, (_, i) => ({
@@ -89,13 +94,13 @@ const HomeFeed: React.FC<HomeFeedProps> = ({ onLoginRequired }) => {
       }));
 
       if (pageNum === 1) {
-        setMemes(mockMemes);
+        setMemes(feed);
       } else {
         setMemes(prev => [...prev, ...mockMemes]);
       }
 
       // Check if there are more memes to load
-      setHasMore(mockMemes.length === 20);
+      setHasMore(feed.length === 20);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Error fetching memes:', err);

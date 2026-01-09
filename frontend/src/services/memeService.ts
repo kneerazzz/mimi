@@ -3,11 +3,11 @@ import { HomePageParams, memeId, commentId } from "@/types";
 
 export type ContentType = "MemeFeedPost" | "CreatedMeme";
 
-export const getHomeMemes = async ( { page }: HomePageParams  ) => {
-    if(page < 1){
+export const getHomeMemes = async (  pageNum : number  ) => {
+    if(pageNum < 1){
         throw new Error("Page must be >=1")
     }
-    const response = await api.get(`/memes/homepage?page=${page}`)
+    const response = await api.get(`/memes/homepage?page=${pageNum}`)
     return response.data;
 }
 

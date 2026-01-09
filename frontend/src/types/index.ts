@@ -1,5 +1,5 @@
 export interface HomePageParams {
-    page: number
+    pageNum: number
 }
 
 export type memeId = string;

@@ -1,6 +1,6 @@
-'use client';
 
-import React, { useState } from 'react';
+'use client'
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import {
   Share2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { getRedditMemeDetails, toggleLike } from '@/services/memeService';
 
 // Mock useAuth hook - replace with your actual auth hook
 const useAuth = () => {
@@ -46,11 +47,22 @@ interface MemeCardProps {
   onLoginRequired?: () => void; // Callback to open login modal
 }
 
-const MemeCard: React.FC<MemeCardProps> = ({ meme, onLoginRequired }) => {
+const MemeCard: React.FC<MemeCardProps> =  ({ meme, onLoginRequired }) => {
   const { isLoggedIn } = useAuth();
-  const [isLiked, setIsLiked] = useState(meme.isLiked || false);
-  const [isSaved, setIsSaved] = useState(meme.isSaved || false);
-  const [likeCount, setLikeCount] = useState(meme.originalScore || 0);
+  const [memeDetails, setMemeDetails] = useState()
+
+  useEffect(() => {
+      const getDetails = async () => {
+        const response = await getRedditMemeDetails(meme._id);
+        setMemeDetails(response.data.memeDetails);
+    }
+    getDetails()
+  }, [])
+
+
+  const [isLiked, setIsLiked] = useState(memeDetails.stats.isLiked || false);
+  const [isSaved, setIsSaved] = useState(memeDetails.stats.isSaved || false);
+  const [likeCount, setLikeCount] = useState( memeDetails.stats.likeCount || 0);
 
   // Handle like action
   const handleLike = async (e: React.MouseEvent) => {
@@ -64,7 +76,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme, onLoginRequired }) => {
 
     // Optimistic update
     setIsLiked(!isLiked);
-    setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
+    setLikeCount((prev: number) => isLiked ? prev - 1 : prev + 1);
 
     try {
       // TODO: Call your like API endpoint
@@ -73,7 +85,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme, onLoginRequired }) => {
     } catch (error) {
       // Revert on error
       setIsLiked(isLiked);
-      setLikeCount(prev => isLiked ? prev + 1 : prev - 1);
+      setLikeCount((prev: number) => isLiked ? prev + 1 : prev - 1);
       console.error('Failed to toggle like:', error);
     }
   };
