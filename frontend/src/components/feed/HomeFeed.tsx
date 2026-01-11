@@ -1,30 +1,33 @@
-'use client'
+'use client';
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MemeCard from '../memes/MemeCard';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import { getHomeMemes } from '@/services/memeService';
+import Masonry from 'react-masonry-css';
 
-import Masonry from 'react-masonry-css'; // Import the library
+/* ---------------- Masonry Breakpoints ---------------- */
 
-// Define how many columns you want at specific screen widths
 const breakpointColumnsObj = {
-  default: 4,   // 5 columns on huge screens
-  1536: 3,      // 4 columns on 2xl screens
-  1280: 3,      // 3 columns on xl screens
-  1024: 2,      // 3 columns on lg screens
-  768: 2,       // 2 columns on md screens
-  640: 1        // 1 column on mobile
+  default: 5,
+  1536: 4,
+  1280: 3,
+  1024: 2,
+  768: 2,
+  640: 1,
 };
+
+/* ---------------- Types ---------------- */
 
 interface Meme {
   _id: string;
   title: string;
+  imageUrl: string;
   author?: {
     username: string;
     profilePic?: string;
   };
-  imageUrl: string;
   originalScore?: number;
   isLiked?: boolean;
   isSaved?: boolean;
@@ -32,169 +35,161 @@ interface Meme {
   contentType?: string;
 }
 
-// 1. Updated Skeleton for Masonry Grid
+/* ---------------- Skeleton ---------------- */
+
 const MasonrySkeleton = () => (
-  <div className="break-inside-avoid mb-4 bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden animate-pulse">
-    <div className="h-75 w-full bg-zinc-800/30" />
-    <div className="p-3 space-y-2">
-      <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-full bg-zinc-800" />
-        <div className="h-3 w-24 bg-zinc-800 rounded" />
+  <div className="break-inside-avoid mb-6">
+    <div className="rounded-xl bg-zinc-900/60 animate-pulse overflow-hidden">
+      <div className="h-55 bg-zinc-800/40" />
+      <div className="p-3 space-y-2">
+        <div className="h-3 w-3/4 bg-zinc-800 rounded" />
+        <div className="flex items-center gap-2 mt-3">
+          <div className="h-7 w-7 rounded-full bg-zinc-800" />
+          <div className="h-3 w-24 bg-zinc-800 rounded" />
+        </div>
       </div>
     </div>
   </div>
 );
 
+/* ---------------- Home Feed ---------------- */
+
 const HomeFeed = () => {
   const [memes, setMemes] = useState<Meme[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Initial load
-  const [isFetchingMore, setIsFetchingMore] = useState(false); // Background scroll load
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  // 2. The "Observer" Ref for Infinite Scroll
   const observer = useRef<IntersectionObserver | null>(null);
-  
-  // This callback attaches to the LAST element in the list
-  const lastMemeElementRef = useCallback((node: HTMLDivElement) => {
-    if (isLoading || isFetchingMore) return;
-    
-    // Disconnect previous observer
-    if (observer.current) observer.current.disconnect();
 
-    observer.current = new IntersectionObserver(entries => {
-      // If the last element is visible AND we have more data
-      if (entries[0].isIntersecting && hasMore) {
-        setPage(prevPage => prevPage + 1);
-      }
-    });
+  const lastMemeRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (isLoading || isFetchingMore) return;
+      if (observer.current) observer.current.disconnect();
 
-    if (node) observer.current.observe(node);
-  }, [isLoading, isFetchingMore, hasMore]);
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((p) => p + 1);
+        }
+      });
 
+      if (node) observer.current.observe(node);
+    },
+    [isLoading, isFetchingMore, hasMore]
+  );
 
   const fetchMemes = async (pageNum: number) => {
     try {
-      if (pageNum === 1) setIsLoading(true);
-      else setIsFetchingMore(true);
-      
+      pageNum === 1 ? setIsLoading(true) : setIsFetchingMore(true);
       setError(null);
 
-      const response = await getHomeMemes(pageNum);
-      const newMemes = response.data?.memes || response.data?.feed || []; 
+      const res = await getHomeMemes(pageNum);
+      const newMemes = res.data?.memes || res.data?.feed || [];
 
-      setMemes(prev => {
-        // Safety: Filter out duplicates based on _id just in case
-        const existingIds = new Set(prev.map(m => m._id));
-        const uniqueNewMemes = newMemes.filter((m: Meme) => !existingIds.has(m._id));
-        return [...prev, ...uniqueNewMemes];
+      setMemes((prev) => {
+        const ids = new Set(prev.map((m) => m._id));
+        return [...prev, ...newMemes.filter((m: Meme) => !ids.has(m._id))];
       });
 
-      // If we got 0 items, we are done
-      if (newMemes.length === 0) {
-        setHasMore(false);
-      }
-
+      if (newMemes.length === 0) setHasMore(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to load memes');
+      setError(err.message || 'Failed to load feed');
     } finally {
       setIsLoading(false);
       setIsFetchingMore(false);
     }
   };
 
-  // Trigger fetch whenever "page" number updates
   useEffect(() => {
     fetchMemes(page);
   }, [page]);
 
-
   const handleRefresh = () => {
     setPage(1);
     setHasMore(true);
-    setMemes([]); // Clear current list
+    setMemes([]);
     fetchMemes(1);
   };
 
-  // Error State
+  /* ---------------- Error ---------------- */
+
   if (error && memes.length === 0) {
     return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center p-4 text-center">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
         <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
-        <h3 className="text-zinc-200 font-semibold mb-2">Could not load feed</h3>
-        <Button onClick={handleRefresh} variant="outline" className="border-zinc-700 text-zinc-300">
-          Try Again
+        <h3 className="text-zinc-200 font-semibold mb-2">
+          Failed to load feed
+        </h3>
+        <Button
+          onClick={handleRefresh}
+          variant="outline"
+          className="border-zinc-700 text-zinc-300"
+        >
+          Retry
         </Button>
       </div>
     );
   }
 
+  /* ---------------- Render ---------------- */
+
   return (
-    <div className="min-h-screen bg-zinc-950 w-full">
-      
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
-         <h1 className="text-xl font-bold bg-linear-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+      <header className="sticky top-0 z-40 bg-zinc-950/80 backdrop-blur-xl">
+        <div className="max-w-400 mx-auto px-6 py-4 flex items-center justify-between">
+          <h1 className="text-xl font-semibold tracking-tight">
             Mimi
-         </h1>
-         <Button 
-            variant="ghost" 
-            size="icon" 
+          </h1>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleRefresh}
             className="text-zinc-400 hover:text-white"
-         >
-            <RefreshCw className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
-         </Button>
+          >
+            <RefreshCw
+              className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`}
+            />
+          </Button>
+        </div>
       </header>
 
-      <main className="mx-auto px-8 py-6">
-        
-        {/* 3. The Masonry Grid Layout (CSS Columns) */}
-        {/* Mobile: 2 cols | Tablet: 3 cols | Desktop: 4 cols | Large: 5 cols | XL: 6 cols */}
+      {/* Feed */}
+      <main className="max-w-400 mx-auto px-6 py-8">
         <Masonry
           breakpointCols={breakpointColumnsObj}
-          className='my-masonry-grid'
-          columnClassName='my-masonry-grid_column'
+          className="my-masonry-grid"
+          columnClassName="my-masonry-grid_column"
         >
-          
           {memes.map((meme, index) => {
-            // Check if this is the last element to attach the observer
-            if (memes.length === index + 1) {
-              return (
-                <div ref={lastMemeElementRef} key={meme._id} className='break-inside-avoid mb-4 px-2 py-3' >
+            const isLast = memes.length === index + 1;
+            return (
+              <div
+                key={meme._id}
+                ref={isLast ? lastMemeRef : undefined}
+                className="break-inside-avoid mb-6"
+              >
+                <div className="rounded-xl bg-zinc-900 shadow-md hover:shadow-xl transition-shadow">
                   <MemeCard meme={meme} />
                 </div>
-              );
-            } else {
-              return (
-                <div key={meme._id} className="break-inside-avoid mb-6 mx-1">
-                  <MemeCard meme={meme} />
-                </div>
-              );
-            }
+              </div>
+            );
           })}
 
-          {/* Skeleton Loaders (Show when loading initial OR more) */}
-          {(isLoading || isFetchingMore) && (
-            <>
-              <MasonrySkeleton />
-              <MasonrySkeleton />
-              <MasonrySkeleton />
-              <MasonrySkeleton />
-              <MasonrySkeleton />
-              <MasonrySkeleton />
-            </>
-          )}
+          {(isLoading || isFetchingMore) &&
+            Array.from({ length: 6 }).map((_, i) => (
+              <MasonrySkeleton key={i} />
+            ))}
         </Masonry>
 
-        {/* End of Feed Message */}
         {!hasMore && !isLoading && (
-          <div className="py-12 text-center text-zinc-500">
-              <p>You've reached the end of the internet 🏁</p>
+          <div className="py-16 text-center text-zinc-500">
+            You’ve reached the end 🏁
           </div>
         )}
-
       </main>
     </div>
   );

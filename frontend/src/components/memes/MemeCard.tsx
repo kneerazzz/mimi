@@ -10,40 +10,31 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
-import { 
-  Heart, 
-  MessageCircle, 
-  MoreHorizontal, 
-  Bookmark,
-  Download,
-  Share2,
-  ExternalLink
-} from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Heart, MoreHorizontal, Bookmark, Download, Share2 } from 'lucide-react';
 import { toggleLike, toggleSave, ContentType } from '@/services/memeService';
-import { useAuth } from '@/context/AuthContext'; 
+import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 
 // --- Types based on your Real API Response ---
 interface MemeStats {
-    likeCount?: number;
-    commentCount?: number;
-    isLiked?: boolean;
-    isSaved?: boolean;
+  likeCount?: number;
+  commentCount?: number;
+  isLiked?: boolean;
+  isSaved?: boolean;
 }
 
 interface MemeData {
-    _id: string;
-    title: string;
-    contentUrl?: string; // API uses this
-    imageUrl?: string;   // Fallback
-    author?: string | { username: string; profilePic?: string }; // Can be string or object
-    createdAt?: string;
-    subreddit?: string;
-    originalScore?: number; // Reddit Score
-    stats?: MemeStats;      // Nested stats from details endpoint
-    isLiked?: boolean;      // Flat stats from feed endpoint
-    isSaved?: boolean;      // Flat stats from feed endpoint
+  _id: string;
+  title: string;
+  contentUrl?: string;
+  imageUrl?: string;
+  author?: string | { username: string; profilePic?: string };
+  createdAt?: string;
+  subreddit?: string;
+  originalScore?: number;
+  stats?: MemeStats;
+  isLiked?: boolean;
+  isSaved?: boolean;
 }
 
 interface MemeCardProps {
@@ -51,32 +42,32 @@ interface MemeCardProps {
 }
 
 const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
-  const { user, setShowLoginModal } = useAuth(); 
+  const { user, setShowLoginModal } = useAuth();
+  const [isHovered, setIsHovered] = useState(false);
 
-  // --- 1. DATA NORMALIZATION (The "Smart" Part) ---
-  // This ensures the card works with both "Feed Items" and "Detail Items"
+  // --- DATA NORMALIZATION ---
   const title = meme.title;
   const imageUrl = meme.contentUrl || meme.imageUrl || "";
-  const authorName = typeof meme.author === 'string' ? meme.author : meme.author?.username || 'Anonymous';
-  const authorPic = typeof meme.author === 'object' ? meme.author?.profilePic : undefined;
+  const authorName =
+    typeof meme.author === 'string'
+      ? meme.author
+      : meme.author?.username || 'Anonymous';
+  const authorPic =
+    typeof meme.author === 'object' ? meme.author?.profilePic : undefined;
   const subreddit = meme.subreddit;
-  
-  // Prioritize "stats" object (from details), fall back to root props (from feed)
+
   const initialIsLiked = meme.stats?.isLiked ?? meme.isLiked ?? false;
   const initialIsSaved = meme.stats?.isSaved ?? meme.isSaved ?? false;
-  // If internal like count is 0, maybe show original reddit score? (Optional choice)
-  const initialLikeCount = meme.stats?.likeCount ?? 0; 
-  const commentCount = meme.stats?.commentCount ?? 0;
-  
-  const contentType = "MemeFeedPost"; 
+  const initialLikeCount = meme.stats?.likeCount ?? 0;
+  const contentType = "MemeFeedPost";
 
-  // --- 2. STATE ---
+  // --- STATE ---
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [isSaved, setIsSaved] = useState(initialIsSaved);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
 
-  // --- 3. HANDLERS ---
+  // --- HANDLERS ---
   const checkAuth = () => {
     if (!user || !user.is_registered) {
       setShowLoginModal(true);
@@ -88,22 +79,21 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
   const handleLike = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!checkAuth()) return;
     if (isLikeLoading) return;
 
     const previousLiked = isLiked;
-    
-    // Optimistic Update
+    const previousCount = likeCount;
+
     setIsLiked(!isLiked);
-    setLikeCount((prev) => isLiked ? prev - 1 : prev + 1);
+    setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
     setIsLikeLoading(true);
 
     try {
       await toggleLike(meme._id, contentType);
     } catch (error) {
       setIsLiked(previousLiked);
-      setLikeCount((prev) => isLiked ? prev + 1 : prev - 1); // Revert count
+      setLikeCount(previousCount);
       toast.error("Failed to like");
     } finally {
       setIsLikeLoading(false);
@@ -113,7 +103,6 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
   const handleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!checkAuth()) return;
 
     const previousSaved = isSaved;
@@ -121,7 +110,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
 
     try {
       await toggleSave(meme._id, contentType);
-      toast.success(isSaved ? "Removed from bookmarks" : "Saved to bookmarks");
+      toast.success(isSaved ? "Removed from saved" : "Saved");
     } catch (error) {
       setIsSaved(previousSaved);
       toast.error("Failed to save");
@@ -131,6 +120,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
     try {
       const response = await fetch(imageUrl);
       const blob = await response.blob();
@@ -151,6 +141,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
     const shareUrl = `${window.location.origin}/feed/${meme._id}`;
     if (navigator.share) {
       await navigator.share({ title: title, url: shareUrl }).catch(() => {});
@@ -163,133 +154,127 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
   const getInitials = (name: string) => name.substring(0, 2).toUpperCase();
 
   return (
-    <Card className="w-full bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-colors overflow-hidden mb-4">
-      {/* Header */}
-      <Link href={`/feed/${meme._id}?type="MemeFeedPost"`}>
-        <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-zinc-800/50 transition-colors">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 border border-zinc-700">
-              <AvatarImage src={authorPic} alt={authorName} />
-              <AvatarFallback className="bg-zinc-800 text-zinc-300 font-bold">
-                {getInitials(authorName)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-zinc-100">
-                  {authorName}
-                </span>
-                {subreddit && (
-                  <span className="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded-full border border-zinc-700">
-                    r/{subreddit}
-                  </span>
-                )}
+    <div 
+      className="break-inside-avoid mb-4"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Link href={`/feed/${meme._id}`} className="block group">
+        <Card className="overflow-hidden bg-zinc-900 border-zinc-800 hover:border-zinc-700 transition-all duration-300 relative">
+          {/* Image Container - Natural aspect ratio */}
+          <div className="relative w-full bg-zinc-950 overflow-hidden">
+            {imageUrl ? (
+              <>
+                <img
+                  src={imageUrl}
+                  alt={title}
+                  className="w-full h-auto object-contain"
+                />
+                {/* Hover Overlay with Save & More buttons */}
+                <div className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    {/* Save Button */}
+                    <Button
+                      onClick={handleSave}
+                      className={`rounded-full h-12 px-6 font-semibold shadow-lg ${
+                        isSaved
+                          ? 'bg-zinc-900 hover:bg-zinc-800 text-white'
+                          : 'bg-red-600 hover:bg-red-700 text-white'
+                      }`}
+                    >
+                      {isSaved ? 'Saved' : 'Save'}
+                    </Button>
+
+                    {/* More Options Menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          onClick={(e) => e.stopPropagation()}
+                          className="rounded-full h-12 w-12 p-0 bg-zinc-900 hover:bg-zinc-800 text-white shadow-lg"
+                        >
+                          <MoreHorizontal className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-zinc-900 border-zinc-800 text-zinc-100 w-48"
+                      >
+                        <DropdownMenuItem
+                          onClick={handleDownload}
+                          className="gap-3 cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 py-3"
+                        >
+                          <Download className="h-4 w-4" />
+                          <span>Download image</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={handleShare}
+                          className="gap-3 cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 py-3"
+                        >
+                          <Share2 className="h-4 w-4" />
+                          <span>Share</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="w-full h-64 flex items-center justify-center">
+                <p className="text-zinc-600">No Image Available</p>
               </div>
-              {meme.createdAt && (
-                <span className="text-xs text-zinc-500">
-                  {formatDistanceToNow(new Date(meme.createdAt), { addSuffix: true })}
-                </span>
-              )}
-            </div>
+            )}
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800">
-                <MoreHorizontal className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-zinc-950 border-zinc-800 text-zinc-100">
-              <DropdownMenuItem onClick={handleSave} className="cursor-pointer hover:bg-zinc-800">
-                <Bookmark className={`mr-2 h-4 w-4 ${isSaved ? 'fill-zinc-100' : ''}`} />
-                {isSaved ? 'Unsave' : 'Save'}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDownload} className="cursor-pointer hover:bg-zinc-800">
-                <Download className="mr-2 h-4 w-4" />
-                Download
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShare} className="cursor-pointer hover:bg-zinc-800">
-                <Share2 className="mr-2 h-4 w-4" />
-                Share
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </Link>
+          {/* Content Section */}
+          <div className="p-4">
+            {/* Title */}
+            {title && (
+              <h3 className="text-zinc-100 font-medium text-base mb-3 line-clamp-2 group-hover:text-purple-300 transition-colors">
+                {title}
+              </h3>
+            )}
 
-      {/* Title */}
-      {title && (
-        <Link href={`/feed/${meme._id}`}>
-          <div className="px-4 pb-3 cursor-pointer">
-            <h3 className="text-zinc-100 font-medium text-base leading-snug hover:text-blue-400 transition-colors">
-              {title}
-            </h3>
-          </div>
-        </Link>
-      )}
+            {/* Author & Metadata */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8 ring-2 ring-zinc-800">
+                  <AvatarImage src={authorPic} alt={authorName} />
+                  <AvatarFallback className="bg-linear-to-br from-purple-500 to-pink-500 text-white text-xs font-semibold">
+                    {getInitials(authorName)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold text-zinc-300">{authorName}</span>
+                  {subreddit && (
+                    <span className="text-xs text-purple-400">r/{subreddit}</span>
+                  )}
+                </div>
+              </div>
 
-      {/* Image */}
-      <Link href={`/feed/${meme._id}`}>
-        <div className="relative bg-black min-h-50 flex items-center justify-center cursor-pointer group">
-          {imageUrl ? (
-             <img
-               src={imageUrl}
-               alt={title}
-               className="w-full h-auto object-contain max-h-50 group-hover:opacity-90 transition-opacity"
-               loading="lazy"
-             />
-          ) : (
-             <div className="p-10 text-zinc-500">No Image Available</div>
-          )}
-        </div>
-      </Link>
-
-      {/* Actions Footer */}
-      <div className="flex items-center justify-between p-3 border-t border-zinc-800">
-        <div className="flex items-center gap-1">
-            {/* Like Button */}
-            <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLike}
-            className={`gap-2 h-9 px-3 ${
-                isLiked 
-                ? 'text-red-500 hover:text-red-600 hover:bg-red-950/30' 
-                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
-            }`}
-            >
-            <Heart className={`h-5 w-5 ${isLiked ? 'fill-current' : ''}`} />
-            <span className="text-sm font-medium">
-                {likeCount > 0 ? likeCount : "Like" }
-            </span>
-            </Button>
-
-            {/* Comment Button */}
-            <Link href={`/feed/${meme._id}`}>
-            <Button
+              {/* Like Button */}
+              <Button
                 variant="ghost"
                 size="sm"
-                className="gap-2 h-9 px-3 text-zinc-400 hover:text-blue-400 hover:bg-blue-950/20"
-            >
-                <MessageCircle className="h-5 w-5" />
-                <span className="text-sm font-medium">
-                    {commentCount > 0 ? commentCount : "Comment"}
-                </span>
-            </Button>
-            </Link>
-        </div>
-
-        {/* Share Button (Quick Access) */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleShare}
-          className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 h-9 w-9"
-        >
-          <Share2 className="h-4 w-4" />
-        </Button>
-      </div>
-    </Card>
+                onClick={handleLike}
+                disabled={isLikeLoading}
+                className={`gap-2 ${
+                  isLiked
+                    ? 'text-pink-500 hover:text-pink-600 hover:bg-pink-500/10'
+                    : 'text-zinc-400 hover:text-pink-500 hover:bg-zinc-800'
+                }`}
+              >
+                <Heart
+                  className={`h-5 w-5 transition-all ${
+                    isLiked ? 'fill-pink-500' : ''
+                  }`}
+                />
+                <span className="font-medium">{likeCount}</span>
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </Link>
+    </div>
   );
 };
 
