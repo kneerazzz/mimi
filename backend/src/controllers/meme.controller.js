@@ -9,7 +9,7 @@ import { SavedMeme } from "../models/savedMeme.model.js";
 import { Comment } from "../models/comment.model.js"; 
 
 
-const MAX_MEMES = 2000;
+const MAX_MEMES = 10000;
 /**
  * Helper function to determine if a user has interacted with a temporary post, 
  * considering its permanent clone (CreatedMeme) record.
@@ -18,25 +18,20 @@ const MAX_MEMES = 2000;
  * @param {string} contentType - The expected content type for the feed (MemeFeedPost).
  */
 const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") => {
-    if (!feed || feed.length === 0) {
-        return []; 
-    }
+    if (!feed || feed.length === 0) return []; 
     
     const tempContentIds = feed.map(post => post._id);
     const permanentRedditIds = feed.map(post => post.redditPostId);
     
+    // Find permanent clones to check for interactions there too
     const permanentClones = await CreatedMeme.find({ originalRedditId: { $in: permanentRedditIds } }).select('_id originalRedditId');
     
     const cloneMap = new Map();
-    permanentClones.forEach(clone => {
-        cloneMap.set(clone.originalRedditId, clone._id.toString());
-    });
-
+    permanentClones.forEach(clone => cloneMap.set(clone.originalRedditId, clone._id.toString()));
     const permanentCloneMDBIds = Array.from(cloneMap.values());
+    
     const allInteractionIds = [...tempContentIds, ...permanentCloneMDBIds];
 
-
-    // 3. Query the Like and SavedMeme collections for all interaction IDs
     const [userLikes, userSaves] = await Promise.all([
         Like.find({
             user: userId,
@@ -53,36 +48,20 @@ const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") =
     const likedIds = new Set(userLikes.map(like => like.contentId.toString()));
     const savedIds = new Set(userSaves.map(save => save.contentId.toString()));
 
-    // 4. Map the results back to the original temporary feed posts
     return feed.map(post => {
         const tempMDBId = post._id.toString();
         const permRedditId = post.redditPostId;
-        const permanentCloneId = cloneMap.get(permRedditId); // Look up permanent ID using Reddit ID
+        const permanentCloneId = cloneMap.get(permRedditId);
 
-        // Check interaction status against: 
-        // a) The temporary MDB ID (in case the like hasn't been switched over yet)
-        const checkTemporary = likedIds.has(tempMDBId); 
-        
-        // b) The permanent clone MDB ID (where the persistence record lives)
-        const checkPermanent = permanentCloneId && likedIds.has(permanentCloneId);
-        
-        const isLiked = checkTemporary || checkPermanent;
-        
-        // Repeat logic for isSaved
-        const checkTemporarySave = savedIds.has(tempMDBId);
-        const checkPermanentSave = permanentCloneId && savedIds.has(permanentCloneId);
-        const isSaved = checkTemporarySave || checkPermanentSave;
+        const isLiked = likedIds.has(tempMDBId) || (permanentCloneId && likedIds.has(permanentCloneId));
+        const isSaved = savedIds.has(tempMDBId) || (permanentCloneId && savedIds.has(permanentCloneId));
 
-
+        // Handle both Mongoose Documents and Aggregation Objects
         const postObject = post.toObject ? post.toObject() : post;
-        return {
-            ...postObject,
-            isLiked: isLiked,
-            isSaved: isSaved
-        }
+        
+        return { ...postObject, isLiked, isSaved }
     })
 }
-
 const cacheMemeFeed = async() => {
     try {
         const freshMemes = await fetchMemeFeedFromReddit(150);
@@ -140,14 +119,13 @@ const trimMemeCollection = async () => {
 };
 
 const getHomeFeed = asyncHandler(async(req, res) => {
-    const {page = 1, limit = 20} = req.query;
+    const {page = 1, limit = 100} = req.query;
     const skip = (parseInt(page)-1) * parseInt(limit);
     const parsedLimit = parseInt(limit);
     
-    let feed  = await MemeFeedPost.find({})
-                .sort({originalScore: -1, lastCachedAt :-1})
-                .skip(skip)
-                .limit(parsedLimit)
+    let feed  = await MemeFeedPost.aggregate([
+        { $sample: { size: parsedLimit }}
+    ])
     
     const currentUser = req.user;
     if(currentUser && currentUser.is_registered){
@@ -155,7 +133,7 @@ const getHomeFeed = asyncHandler(async(req, res) => {
         feed = await getInteractionStatus(feed, currentUser._id, "MemeFeedPost")
     } else {
         feed = feed.map(post => ({
-            ...post.toObject(),
+            ...post,
             isLiked: false,
             isSaved: false
         }))
@@ -175,6 +153,32 @@ const getHomeFeed = asyncHandler(async(req, res) => {
         )
     )
 })
+
+const getTrendingMemes = asyncHandler(async(req, res) => {
+    const { page = 1, limit = 50 } = req.query;
+    const skip = (parseInt(page)-1) * parseInt(limit);
+    const parsedLimit = parseInt(limit);
+
+    let feed = await MemeFeedPost.find({})
+        .sort({ originalScore: -1 }) 
+        .skip(skip)
+        .limit(parsedLimit);
+
+    const currentUser = req.user;
+    if(currentUser && currentUser.is_registered){
+        feed = await getInteractionStatus(feed, currentUser._id, "MemeFeedPost")
+    } else {
+        feed = feed.map(post => ({
+            ...post.toObject(),
+            isLiked: false,
+            isSaved: false
+        }))
+    }
+    
+    return res.status(200).json(
+        new ApiResponse(200, { feed }, "Trending memes fetched successfully")
+    )
+});
 
 
 const getMemeDetails = asyncHandler(async(req, res) => {
@@ -232,17 +236,16 @@ const getMemeDetails = asyncHandler(async(req, res) => {
     const skip = (parseInt(page)-1) * parseInt(limit)
     const parsedLimit = parseInt(limit)
 
-    let feed = await MemeFeedPost.find({})
-                .sort({lastCachedAt: -1, originalScore: -1})
-                .skip(skip)
-                .limit(parsedLimit)
+    let feed = await MemeFeedPost.aggregate([
+         { $sample: { size: 100 } }
+    ]);
 
 
     if(currentUser && currentUser.is_registered){
         feed = await getInteractionStatus(feed, currentUser._id, "MemeFeedPost")
     } else {
         feed = feed.map(post => ({
-            ...post.toObject(),
+            ...post,
             isLiked: false,
             isSaved: false
         }))
@@ -271,5 +274,6 @@ export {
     cacheMemeFeed,
     getHomeFeed,
     getMemeDetails,
-    ensureMemeFeedNotEmpty
+    ensureMemeFeedNotEmpty,
+    getTrendingMemes
 }

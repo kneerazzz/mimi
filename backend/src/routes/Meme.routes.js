@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getHomeFeed, getMemeDetails } from "../controllers/meme.controller.js";
+import { getHomeFeed, getMemeDetails, getTrendingMemes } from "../controllers/meme.controller.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 
 const router = Router()
@@ -11,6 +11,10 @@ router.route("/homepage").get(
 
 router.route("/details/:contentId/:contentType").get(
     getMemeDetails
+)
+
+router.route("/trending-memes").get(
+    getTrendingMemes
 )
 
 export default router;

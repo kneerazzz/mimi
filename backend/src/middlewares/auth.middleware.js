@@ -24,9 +24,6 @@ export const verifyJwt = async (req, res, next) => {
             console.warn("JWT refers to non-existent user:", decoded._id);
             return next(); // fallback to anonymous user
         }
-
-        console.log("verifyjwt success", user.username)
-        // Override req.user with the real user
         req.user = user;
         req.user.is_registered = true;
 
