@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import {
   Heart,
   Bookmark,
@@ -425,3 +424,4 @@ export default function MemeDetailsPage() {
     </div>
   );
 }
+

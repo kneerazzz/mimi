@@ -137,28 +137,8 @@ const HomeFeed = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-zinc-950/80 backdrop-blur-xl">
-        <div className="max-w-400 mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold tracking-tight">
-            Mimi
-          </h1>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleRefresh}
-            className="text-zinc-400 hover:text-white"
-          >
-            <RefreshCw
-              className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`}
-            />
-          </Button>
-        </div>
-      </header>
-
       {/* Feed */}
-      <main className="max-w-400 mx-auto px-6 py-8">
+      <main className="max-w-600 mx-auto px-10 py-8">
         <Masonry
           breakpointCols={breakpointColumnsObj}
           className="my-masonry-grid"
