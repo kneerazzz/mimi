@@ -280,7 +280,6 @@ export function Navbar() {
                         variant="ghost" 
                         className="justify-start gap-3"
                         onClick={() => {
-                            router.push('/login')
                           setShowLoginModal(true);
                           setMobileMenuOpen(false);
                         }}

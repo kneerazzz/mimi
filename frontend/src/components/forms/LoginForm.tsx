@@ -10,13 +10,17 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-const LoginPage: React.FC = () => {
+// 1. Define the props interface
+interface LoginFormProps {
+  onSuccess?: () => void; // Optional prop to handle modal closing
+}
+
+// 2. Accept props in the component
+const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const { login } = useAuth();
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
-  
-  // Changed 'email' to 'identifier' to represent Email OR Username
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   
@@ -28,7 +32,6 @@ const LoginPage: React.FC = () => {
     setError('');
     setIsLoading(true);
 
-    // Basic validation
     if (!identifier || !password) {
       setError('Please fill in all fields');
       setIsLoading(false);
@@ -36,16 +39,21 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-        // Determine if input is Email or Username based on "@"
         const isEmail = identifier.includes("@");
-        
-        // Construct payload dynamically based on your backend controller expectations
         const payload = isEmail 
             ? { email: identifier, password } 
             : { username: identifier, password };
 
         await login(payload);
-        router.push('/'); 
+
+        // 3. Conditional Navigation: 
+        // If inside a modal (onSuccess exists), just run that.
+        // Otherwise (standalone page), redirect.
+        if (onSuccess) {
+            onSuccess();
+        } else {
+            router.push('/');
+        }
 
     } catch (err: any) {
         const errorMessage = err.response?.data?.message || "Invalid credentials. Please try again.";
@@ -55,17 +63,15 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  // 4. Removed the outer "min-h-screen" and background divs 
+  // so this Card fits perfectly inside your Modal.
   return (
-    <div className="min-h-screen w-full bg-zinc-950 flex items-center justify-center p-4">
-
-      <div className="absolute inset-0 bg-linear-to-br from-zinc-900 via-zinc-950 to-black"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--tw-gradient-stops))] from-zinc-800/20 via-transparent to-transparent"></div>
-      
       <Card className="w-full max-w-md relative z-10 bg-zinc-900/50 border-zinc-800 backdrop-blur-xl shadow-2xl">
         <form onSubmit={handleSubmit}>
             <CardHeader className="space-y-1 pb-6">
             <div className="flex items-center justify-center mb-1">
                 <div className="w-12 h-12 bg-linear-to-br from-zinc-400 to-zinc-600 rounded-full flex items-center justify-center">
+                {/* Ensure /assets/login.png exists, or use a fallback Icon */}
                 <Image width={100} height={100} src="/assets/login.png" alt='Login' className="w-12 h-12 rounded-full" />
                 </div>
             </div>
@@ -89,7 +95,6 @@ const LoginPage: React.FC = () => {
                     Email or Username
                 </Label>
                 <div className="relative">
-                    {/* Switch icon based on input content */}
                     {identifier.includes('@') ? (
                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
                     ) : (
@@ -180,7 +185,6 @@ const LoginPage: React.FC = () => {
                     disabled={isLoading}
                     onClick={() => router.push("/upcoming")}
                 >
-                    {/* SVG Icons kept same as provided */}
                     <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path
                         fill="currentColor"
@@ -214,21 +218,10 @@ const LoginPage: React.FC = () => {
                     GitHub
                 </Button>
                 </div>
-                
-                <p className="text-center text-sm text-zinc-500 pt-2">
-                Don't have an account?{' '}
-                <Link
-                    href="/register"
-                    className="text-zinc-300 cursor-pointer hover:text-zinc-100 font-medium transition-colors hover:underline"
-                >
-                    Sign up
-                </Link>
-                </p>
             </CardFooter>
         </form>
       </Card>
-    </div>
   );
 };
 
-export default LoginPage;
+export default LoginForm;

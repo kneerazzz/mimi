@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { Navbar } from "@/components/parts/Header";
+import LoginModal from "@/components/auth/LoginModal";
 
 
 const geistSans = Geist({
@@ -36,6 +37,7 @@ export default function RootLayout({
             <Navbar />
             <Toaster richColors position="top-right" />
             {children}
+            <LoginModal />
         </AuthProvider>
       </body>
     </html>

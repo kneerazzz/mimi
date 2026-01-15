@@ -226,7 +226,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
         onMouseLeave={() => setIsHovered(false)}
       >
         <Link href={`/feed/${meme._id}`} className="block group">
-          <Card className="overflow-hidden bg-linear-to-br from-zinc-900 to-zinc-950 border-zinc-800 hover:border-purple-500/50 transition-all duration-300 relative hover:shadow-xl hover:shadow-purple-500/10">
+          <Card className="overflow-hidden bg-linear-to-br from-zinc-800 to-zinc-950 border-zinc-800 hover:border-zinc-400 transition-all duration-300 relative border-2 hover:shadow-xl hover:shadow-zinc-500/10">
             {/* Trending Badge */}
             {isTrending && (
               <div className="absolute top-3 left-3 z-10 bg-linear-to-r from-orange-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
@@ -290,14 +290,13 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                 <div className="absolute top-4 right-4 flex gap-2">
                   <Button
                     onClick={handleSave}
-                    className={`rounded-full h-12 px-6 font-semibold shadow-lg backdrop-blur-md transition-all ${
+                    className={`rounded-lg h-12 px-6 font-semibold shadow-lg backdrop-blur-md transition-all ${
                       isSaved
                         ? 'bg-purple-600 hover:bg-purple-700 text-white scale-105'
                         : 'bg-white/90 hover:bg-white text-black'
                     }`}
                   >
-                    <Bookmark className={`h-4 w-4 mr-2 ${isSaved ? 'fill-white' : ''}`} />
-                    {isSaved ? 'Saved' : 'Save'}
+                    <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-white' : ''}`} />
                   </Button>
 
                   <DropdownMenu>
@@ -345,7 +344,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
             <div className="p-4">
               {/* Title with gradient on hover */}
               {title && (
-                <h3 className="text-zinc-100 font-semibold text-base mb-3 line-clamp-2 group-hover:bg-linear-to-r group-hover:from-purple-400 group-hover:to-pink-400 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
+                <h3 className="text-zinc-100 font-semibold text-base mb-3 line-clamp-2 group-hover:bg-linear-to-r group-hover:from-zinc-300 group-hover:to-zinc-300 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
                   {title}
                 </h3>
               )}
@@ -365,8 +364,8 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
               )}
 
               {/* Author & Metadata */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800">
                   <Avatar className="h-9 w-9 ring-2 ring-purple-500/50">
                     <AvatarImage src={authorPic} alt={authorName} />
                     <AvatarFallback className="bg-linear-to-br from-purple-500 to-pink-500 text-white text-xs font-bold">
@@ -381,50 +380,50 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                     </div>
                   </div>
                 </div>
+                <div className="flex items-center justify-end pt-3 border-t border-zinc-800">
+                  {/* Like Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLike}
+                    disabled={isLikeLoading}
+                    className={`gap-2 transition-all ${
+                      isLiked
+                        ? 'text-pink-500 hover:text-pink-600 hover:bg-pink-500/10'
+                        : 'text-zinc-400 hover:text-pink-500 hover:bg-zinc-800'
+                    }`}
+                  >
+                    <Heart
+                      className={`h-5 w-5 transition-all ${
+                        isLiked ? 'fill-pink-500 scale-110' : ''
+                      }`}
+                    />
+                    <span className="font-semibold">{formatNumber(likeCount)}</span>
+                  </Button>
+
+                  {/* Comment Count */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2 text-zinc-400 hover:text-blue-400 hover:bg-zinc-800"
+                  >
+                    <MessageCircle className="h-5 w-5" />
+                    <span className="font-semibold">{formatNumber(commentCount)}</span>
+                  </Button>
+
+                  {/* Share Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleShare}
+                    className="gap-2 text-zinc-400 hover:text-green-400 hover:bg-zinc-800"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
 
               {/* Interaction Bar */}
-              <div className="flex items-center justify-between pt-3 border-t border-zinc-800">
-                {/* Like Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLike}
-                  disabled={isLikeLoading}
-                  className={`gap-2 transition-all ${
-                    isLiked
-                      ? 'text-pink-500 hover:text-pink-600 hover:bg-pink-500/10'
-                      : 'text-zinc-400 hover:text-pink-500 hover:bg-zinc-800'
-                  }`}
-                >
-                  <Heart
-                    className={`h-5 w-5 transition-all ${
-                      isLiked ? 'fill-pink-500 scale-110' : ''
-                    }`}
-                  />
-                  <span className="font-semibold">{formatNumber(likeCount)}</span>
-                </Button>
-
-                {/* Comment Count */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2 text-zinc-400 hover:text-blue-400 hover:bg-zinc-800"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  <span className="font-semibold">{formatNumber(commentCount)}</span>
-                </Button>
-
-                {/* Share Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleShare}
-                  className="gap-2 text-zinc-400 hover:text-green-400 hover:bg-zinc-800"
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
-              </div>
             </div>
           </Card>
         </Link>
