@@ -1,7 +1,7 @@
 import api from "./api"
 import { HomePageParams, memeId, commentId } from "@/types";
 
-export type ContentType = "MemeFeedPost" | "CreatedMeme";
+export type ContentType = "MemeFeedPost" | "CreatedMeme" | "Comment" ;
 
 export const getHomeMemes = async (  pageNum : number  ) => {
     if(pageNum < 1){
@@ -57,7 +57,7 @@ export const addComment = async (data: any, memeId: memeId, type: ContentType) =
     return response.data;
 }
 
-export const updateComment = async(data: any, commentId: commentId) => {
+export const updateComment = async(data: {content: string}, commentId: commentId) => {
     if(!data){
         throw new Error("Content is required")
     }
