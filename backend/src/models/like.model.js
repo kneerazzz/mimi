@@ -12,7 +12,7 @@ const likeSchema = new mongoose.Schema({
     contentType: {
         type: String,
         required: true,
-        enum: ["MemeFeedPost", "CreatedMeme", "comment"]
+        enum: ["MemeFeedPost", "CreatedMeme", "Comment"]
     }
 }, {timestamps: true})
 

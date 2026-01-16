@@ -3,6 +3,7 @@ import { Like } from "../models/like.model.js";
 import { MemeFeedPost } from "../models/memeFeedPost.model.js";
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
+import { Comment } from "../models/comment.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 
@@ -55,34 +56,55 @@ const toggleLike = asyncHandler(async(req, res) => {
     } else if(!["Comment", "CreatedMeme"].includes(contentType)){
         throw new ApiError(400, "Invalid content type for liking!")
     }
-    const likesFilter = {
+const likesFilter = {
         user: user._id,
         contentId: finalContentId,
         contentType: finalContentType
-    }
+    };
+    
     let message, isLiked;
-    const existingLike = await Like.findOne(likesFilter)
+    let incrementValue = 0; // Will be +1 or -1
+
+    const existingLike = await Like.findOne(likesFilter);
+    
     if(existingLike){
         await Like.deleteOne(likesFilter);
         message = `Like removed successfully`;
-        isLiked = false
-    }
-    else {
-        await Like.create(likesFilter)
+        isLiked = false;
+        incrementValue = -1; // Decrease count
+    } else {
+        await Like.create(likesFilter);
         message = 'Liked successfully';
         isLiked = true;
+        incrementValue = 1; // Increase count
     }
+
+    // --- THE FIX: Update the count on the parent document (Comment or Meme) ---
+    if(finalContentType === "Comment"){
+        await Comment.findByIdAndUpdate(finalContentId, { 
+            $inc: { likesCount: incrementValue } 
+        });
+    } else if (finalContentType === "CreatedMeme") {
+         // Assuming CreatedMeme also has a likesCount field (Recommended!)
+        await CreatedMeme.findByIdAndUpdate(finalContentId, { 
+            $inc: { likesCount: incrementValue } 
+        });
+    }
+
+    // Now you don't even need to countDocuments, you can just return the status.
+    // But if you want the absolute latest count to be safe:
     const newLikesCount = await Like.countDocuments({
         contentId: finalContentId,
-        contentType: "CreatedMeme"
-    })
-    return res
-    .status(200)
-    .json(
+        contentType: finalContentType
+    });
+
+    return res.status(200).json(
         new ApiResponse(
-            200, {isLiked, newLikesCount, contentId: finalContentId, contentType: finalContentType}, message
+            200, 
+            { isLiked, newLikesCount, contentId: finalContentId }, 
+            message
         )
-    )
+    );
 })
 
 const getAllLikedMemes = asyncHandler(async(req, res) => {

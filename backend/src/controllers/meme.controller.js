@@ -217,24 +217,55 @@ const getMemeDetails = asyncHandler(async(req, res) => {
     }
 
     // 1. Fetch interaction stats and comments
-    const [likeCount, comments] = await Promise.all([
+    const [likeCount, rawComments] = await Promise.all([
         Like.countDocuments({contentId: finalContentId, contentType: "CreatedMeme"}),
         Comment.find({contentId: finalContentId, contentType: "CreatedMeme"})
                 .populate({path: 'user', select: 'username profilePic is_registered'})
                 .sort({ createdAt: 1 })
+                .lean()
     ])
     let isLiked = false;
     let isSaved = false;
+    let processedComments = rawComments;
     if(currentUser && currentUser.is_registered){
-        [isLiked, isSaved] = await Promise.all([
+        // A. Check Meme Status
+        const [memeLike, memeSave] = await Promise.all([
             Like.findOne({user: currentUser._id, contentId: finalContentId, contentType: "CreatedMeme"}),
             SavedMeme.findOne({user: currentUser._id, contentId: finalContentId, contentType: "CreatedMeme"})
-        ])
-    }
+        ]);
+        isLiked = !!memeLike;
+        isSaved = !!memeSave;
 
-    const {page = 1, limit = 20} = req.query;
-    const skip = (parseInt(page)-1) * parseInt(limit)
-    const parsedLimit = parseInt(limit)
+        // B. Check COMMENT Status (The Fix) 
+        // Get all comment IDs
+        const commentIds = rawComments.map(c => c._id);
+        
+        // Find which of these comments the user has liked
+        const userCommentLikes = await Like.find({
+            user: currentUser._id,
+            contentType: "Comment",
+            contentId: { $in: commentIds }
+        }).select("contentId");
+
+        // Create a Set for O(1) lookups
+        const likedCommentIds = new Set(userCommentLikes.map(l => l.contentId.toString()));
+
+        // Map over comments and add the 'isLiked' flag
+        processedComments = rawComments.map(comment => ({
+            ...comment,
+            isLiked: likedCommentIds.has(comment._id.toString()),
+            // Ensure likesCount exists (default to 0 if your schema doesn't have it)
+            likesCount: comment.likesCount || 0 
+        }));
+
+    } else {
+        // Guest User: No likes
+        processedComments = rawComments.map(comment => ({
+            ...comment,
+            isLiked: false,
+            likesCount: comment.likesCount || 0
+        }));
+    }
 
     let feed = await MemeFeedPost.aggregate([
          { $sample: { size: 100 } }
@@ -253,14 +284,14 @@ const getMemeDetails = asyncHandler(async(req, res) => {
     
     // 4. Consolidate response data
     const details = {
-        meme: content.toObject(),
+        meme: content.toObject() ? content.toObject() : content,
         stats: {
             likeCount,
-            commentCount: comments?.length,
+            commentCount: processedComments?.length,
             isLiked: !!isLiked,
             isSaved: !!isSaved
         },
-        comments: comments
+        comments: processedComments
     }
     
     return res
