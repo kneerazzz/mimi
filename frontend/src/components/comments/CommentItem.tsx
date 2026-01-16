@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +39,7 @@ export default function CommentItem({
   contentType,
   onDelete,
 }: Props) {
+  const { setShowLoginModal, user: authUser } = useAuth();
   const [replies, setReplies] = useState<CommentType[]>([]);
   const [showReplies, setShowReplies] = useState(false);
   const [repliesLoaded, setRepliesLoaded] = useState(false);
@@ -91,6 +93,10 @@ export default function CommentItem({
   };
 
   const submitReply = async () => {
+    if(!authUser?.is_registered){
+        setShowLoginModal(true);
+        return;
+    }
     if (!replyText.trim()) return;
     try {
       const res = await addComment(
@@ -111,7 +117,10 @@ export default function CommentItem({
 
   // ... (handleLike, handleDelete, handleEdit remain the same) ...
   const handleLike = async () => {
-    if (!user?.is_registered) return toast.error("Login required");
+    if (!authUser?.is_registered) {
+        setShowLoginModal(true);
+        return;
+    };
     setIsLiked(!isLiked);
     setLikeCount(p => isLiked ? p - 1 : p + 1);
     try {

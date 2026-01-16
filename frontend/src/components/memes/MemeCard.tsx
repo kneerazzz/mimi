@@ -65,7 +65,11 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
 
   const initialIsLiked = meme.stats?.isLiked ?? meme.isLiked ?? false;
   const initialIsSaved = meme.stats?.isSaved ?? meme.isSaved ?? false;
-  const initialLikeCount = meme.stats?.likeCount ?? 0;
+  let rawLikeCount = meme.stats?.likeCount ?? 0;
+  if (initialIsLiked && rawLikeCount === 0) {
+    rawLikeCount = 1;
+  }
+  const initialLikeCount = rawLikeCount;
   const commentCount = meme.stats?.commentCount ?? 0;
   const viewCount = meme.stats?.viewCount ?? 0;
   const isTrending = meme.stats?.isTrending ?? false;
@@ -103,9 +107,11 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
 
     const previousLiked = isLiked;
     const previousCount = likeCount;
+    console.log("likecount", likeCount);
+    console.log(previousCount)
 
     setIsLiked(!isLiked);
-    setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
+    setLikeCount((prev) => Math.max(0, isLiked ? prev - 1 : prev + 1));
     setIsLikeLoading(true);
 
     if (!isLiked) {
@@ -148,9 +154,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
     }
   };
 
-  const handleDownload = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDownload = async () => {
 
     try {
       const response = await fetch(imageUrl);
@@ -292,7 +296,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                     onClick={handleSave}
                     className={`rounded-lg h-12 px-6 font-semibold shadow-lg backdrop-blur-md transition-all ${
                       isSaved
-                        ? 'bg-purple-600 hover:bg-purple-700 text-white scale-105'
+                        ? 'bg-zinc-700 hover:bg-zinc-800 text-white scale-105'
                         : 'bg-white/90 hover:bg-white text-black'
                     }`}
                   >

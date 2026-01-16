@@ -11,7 +11,6 @@ export default function LoginModal() {
 
   return (
     <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
-      <DialogContentBlurry className="p-o border-none bg-transparent shadow-none">
         <DialogContent className="sm:max-w-106.25 bg-zinc-950 border-zinc-800 text-zinc-100">
             <DialogHeader>
             <DialogTitle>Join the Cult 🌟</DialogTitle>
@@ -37,7 +36,6 @@ export default function LoginModal() {
                 </Link>
             </div>
         </DialogContent>
-      </DialogContentBlurry>
     </Dialog>
   );
 }

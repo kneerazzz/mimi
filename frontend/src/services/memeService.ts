@@ -18,6 +18,13 @@ export const getRedditMemeDetails = async ( memeId: memeId, type: ContentType = 
     const response = await api.get(`/memes/details/${memeId}/${type}`)
     return response.data;
 }
+export const getTrendingMemes = async ( pageNum: number ) => {
+    if(pageNum < 1){
+        throw new Error("Page must be >=1")
+    }
+    const response = await api.get(`/memes/trending-memes?page=${pageNum}`);
+    return response.data;
+}
 
 export const toggleLike = async ( memeId: memeId, type: ContentType) => {
     if(!memeId){

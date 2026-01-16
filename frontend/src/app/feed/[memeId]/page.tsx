@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import {
   Heart,
@@ -41,6 +41,8 @@ const feedBreakpoints = {
 export default function MemeDetailsPage() {
   const { memeId } = useParams<{ memeId: string }>();
   const searchParams = useSearchParams();
+  const commentsRef = useRef<HTMLDivElement | null>(null);
+
 
   const contentType =
     searchParams.get('type') === 'CreatedMeme'
@@ -205,32 +207,35 @@ export default function MemeDetailsPage() {
                     )}
                   </div>
                 </div>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-5 w-5" />
-                </Button>
               </div>
 
               <div className="flex justify-between">
                 <div className="flex gap-3">
                   <button onClick={handleLike}>
                     <Heart
-                      className={`h-6 w-6 ${
+                      className={`h-7 w-7 ${
                         isLiked ? 'fill-red-500 text-red-500' : ''
                       }`}
                     />
                   </button>
-                  <button>
-                    <MessageCircle className="h-6 w-6" />
+                  <button onClick={() => {
+                    if(!requireAuth()) return;
+                    commentsRef.current?.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'start',
+                    });
+                  }}>
+                    <MessageCircle className="h-7 w-7" />
                   </button>
                   <button onClick={handleShare}>
-                    <Share2 className="h-6 w-6" />
+                    <Share2 className="h-7 w-7" />
                   </button>
                 </div>
 
                 <div className="flex gap-3">
                   <button onClick={handleSave}>
                     <Bookmark
-                      className={`h-6 w-6 ${
+                      className={`h-7 w-7 ${
                         isSaved ? 'fill-white' : ''
                       }`}
                     />
@@ -239,25 +244,27 @@ export default function MemeDetailsPage() {
                     onClick={handleDownload}
                     disabled={isDownloading}
                   >
-                    <Download className="h-6 w-6" />
+                    <Download className="h-7 w-7" />
                   </button>
                 </div>
               </div>
 
               {likeCount > 0 && (
-                <p className="font-semibold text-sm mt-3">
+                <p className="font-semibold text-md mt-3">
                   {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                 </p>
               )}
             </div>
 
             {/* COMMENTS (OUTSOURCED) */}
-            <CommentsSection
-              comments={comments}
-              memeId={memeId}
-              contentType={contentType}
-              user={user}
-            />
+            <div ref={commentsRef}>
+              <CommentsSection
+                comments={comments}
+                memeId={memeId}
+                contentType={contentType}
+                user={user}
+              />
+            </div>
           </div>
 
           {/* RIGHT */}

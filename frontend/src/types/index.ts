@@ -6,3 +6,5 @@ export type memeId = string;
 
 
 export type commentId = string;
+
+export type templateId = string;

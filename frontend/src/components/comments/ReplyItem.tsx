@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,11 +60,15 @@ export default function ReplyItem({
   const [displayContent, setDisplayContent] = useState(reply.content);
 
   const isOwner = user?._id === reply.user._id;
-
+  const { setShowLoginModal, user: authUser } = useAuth();
   // --- Handlers ---
 
   const handleReplyClick = () => {
-    // 1. Open Input
+
+    if(!authUser?.is_registered){
+        setShowLoginModal(true);
+        return;
+    }
     setIsReplying(p => !p);
     // 2. Auto-fill the @username if opening
     if (!isReplying) {
@@ -72,6 +77,10 @@ export default function ReplyItem({
   };
 
   const submitReply = async () => {
+    if(!authUser?.is_registered){
+        setShowLoginModal(true);
+        return;
+    }
     if (!replyText.trim()) return;
     try {
       // 3. FLATTENING LOGIC:
@@ -92,7 +101,10 @@ export default function ReplyItem({
   };
 
   const handleLike = async () => {
-    if (!user?.is_registered) return toast.error('Login required');
+    if (!authUser?.is_registered) {
+        setShowLoginModal(true);
+        return;
+    }
     setIsLiked(!isLiked);
     setLikesCount(p => (isLiked ? p - 1 : p + 1));
     try {
