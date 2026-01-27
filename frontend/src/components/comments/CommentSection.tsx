@@ -15,7 +15,7 @@ export default function CommentsSection({
   contentType,
   user,
 }: any) {
-  const {setShowLoginModal, user: authUser} = useAuth();
+  const { setShowLoginModal, user: authUser } = useAuth();
   const [comments, setComments] = useState(initialComments);
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +30,6 @@ export default function CommentsSection({
     setIsSubmitting(true);
     try {
       const res = await addComment({ content: text }, memeId, contentType);
-      // Add new comment to top of list
       setComments((prev: any) => [res.data, ...prev]);
       setText('');
     } catch (error) {
@@ -45,28 +44,10 @@ export default function CommentsSection({
   };
 
   return (
-    <div className="flex flex-col h-full">
-    <div className="pt-6 mt-2 pb-6 border-t border-zinc-800 bg-zinc-950/50 backdrop-blur-sm sticky bottom-0">
-        <div className="flex gap-2">
-          <Input 
-            value={text} 
-            onChange={e => setText(e.target.value)} 
-            placeholder="Add a comment..."
-            className="bg-zinc-900 border-zinc-800"
-            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-          />
-          <Button 
-            onClick={handleSubmit} 
-            disabled={isSubmitting || !text.trim()}
-            size="icon"
-            className="bg-zinc-200 hover:bg-zinc-400 shrink-0"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      {/* Scrollable List Area */}
-      <div className="flex-1 overflow-y-auto pr-2 space-y-4 min-h-0">
+    <div className="flex flex-col h-full relative">
+      
+      {/* 1. SCROLLABLE LIST (Must be First) */}
+      <div className="flex-1 overflow-y-auto pr-2 space-y-4 min-h-0 pb-4">
         {comments.length === 0 ? (
           <div className="text-center text-zinc-500 py-10">
             No comments yet. Be the first!
@@ -83,6 +64,29 @@ export default function CommentsSection({
             />
           ))
         )}
+      </div>
+
+      {/* 2. INPUT AREA (Must be Last) */}
+      {/* Moved to the bottom of the DOM structure */}
+      <div className="pt-4 mt-2 pb-6 border-t border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky bottom-0 z-10">
+        <div className="flex gap-2">
+          <Input 
+            value={text} 
+            onChange={e => setText(e.target.value)} 
+            placeholder="Add a comment..."
+            className="bg-zinc-900 border-zinc-800 focus-visible:ring-zinc-500"
+            onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+            // Ensure no autoFocus here
+          />
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isSubmitting || !text.trim()}
+            size="icon"
+            className="bg-zinc-200 hover:bg-zinc-400 shrink-0 text-zinc-900"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

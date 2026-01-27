@@ -84,6 +84,12 @@ export function Navbar() {
                     Templates
                   </Link>
                 </Button>
+                <Button asChild variant={isActive('/feed/trending') ? "secondary" : "ghost"} size="sm" className="gap-2">
+                  <Link href="/feed/trending">
+                    <Star className="h-4 w-4" />
+                    Trending
+                  </Link>
+                </Button>
                 {/* Explore/Features REMOVED for logged in users as requested */}
               </>
             ) : (
@@ -221,6 +227,12 @@ export function Navbar() {
                         <Link href="/templates" onClick={() => setMobileMenuOpen(false)}>
                           <LayoutTemplate className="h-5 w-5" />
                           Templates
+                        </Link>
+                      </Button>
+                      <Button asChild variant="ghost" className="justify-start gap-3">
+                        <Link href="/feed/trending" onClick={() => setMobileMenuOpen(false)}>
+                          <Star className="h-5 w-5" />
+                          Features
                         </Link>
                       </Button>
                       <Separator className="bg-zinc-800" />

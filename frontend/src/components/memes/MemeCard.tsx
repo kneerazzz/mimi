@@ -62,22 +62,21 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
   const authorPic =
     typeof meme.author === 'object' ? meme.author?.profilePic : undefined;
   const subreddit = meme.subreddit;
-
-  const initialIsLiked = meme.stats?.isLiked ?? meme.isLiked ?? false;
-  const initialIsSaved = meme.stats?.isSaved ?? meme.isSaved ?? false;
+  const initialIsLiked = meme.isLiked ?? meme.isLiked ?? false;
+  const initialIsSaved = meme.isSaved ?? meme.isSaved ?? false;
   let rawLikeCount = meme.stats?.likeCount ?? 0;
   if (initialIsLiked && rawLikeCount === 0) {
-    rawLikeCount = 1;
+     rawLikeCount = 1;
   }
+
   const initialLikeCount = rawLikeCount;
-  const commentCount = meme.stats?.commentCount ?? 0;
   const viewCount = meme.stats?.viewCount ?? 0;
   const isTrending = meme.stats?.isTrending ?? false;
   const contentType = "MemeFeedPost";
-
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [isSaved, setIsSaved] = useState(initialIsSaved);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
+  const [commentCount, setCommentCount] = useState(meme.stats?.commentCount || 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
 
@@ -96,7 +95,8 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
       setShowLoginModal(true);
       return false;
     }
-    return true;
+  
+  return true;
   };
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -107,9 +107,6 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
 
     const previousLiked = isLiked;
     const previousCount = likeCount;
-    console.log("likecount", likeCount);
-    console.log(previousCount)
-
     setIsLiked(!isLiked);
     setLikeCount((prev) => Math.max(0, isLiked ? prev - 1 : prev + 1));
     setIsLikeLoading(true);
@@ -155,20 +152,26 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
   };
 
   const handleDownload = async () => {
-
     try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
+      const res = await fetch(
+        `/api/download?url=${encodeURIComponent(imageUrl)}`
+      );
+
+      if (!res.ok) throw new Error("Download failed");
+
+      const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `meme-${meme._id}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `meme-${meme._id}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
       window.URL.revokeObjectURL(url);
       toast.success("Download started");
-    } catch (error) {
+    } catch {
       toast.error("Download failed");
     }
   };
@@ -370,16 +373,16 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
               {/* Author & Metadata */}
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800">
-                  <Avatar className="h-9 w-9 ring-2 ring-purple-500/50">
+                  <Avatar className="h-9 w-9 ring-1 ring-zinc-500/50">
                     <AvatarImage src={authorPic} alt={authorName} />
-                    <AvatarFallback className="bg-linear-to-br from-purple-500 to-pink-500 text-white text-xs font-bold">
+                    <AvatarFallback className="bg-linear-to-br pt-1 from-zinc-500 to-zinc-600 text-white text-xs font-bold">
                       {getInitials(authorName)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-zinc-200">{authorName}</span>
                     <div className="flex items-center gap-2 text-xs text-zinc-500">
-                      {subreddit && <span className="text-purple-400 font-medium">r/{subreddit}</span>}
+                      {subreddit && <span className="text-zinc-400 font-medium">r/{subreddit}</span>}
                       {meme.createdAt && <span>• {getTimeAgo(meme.createdAt)}</span>}
                     </div>
                   </div>

@@ -59,6 +59,7 @@ export default function MemeDetailsPage() {
   const [isSaved, setIsSaved] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [commentCount, setCommentCount] = useState(0);
 
   const requireAuth = () => {
     if (!user?.is_registered) {
@@ -85,6 +86,7 @@ export default function MemeDetailsPage() {
       setIsLiked(stats?.isLiked || false);
       setIsSaved(stats?.isSaved || false);
       setLikeCount(stats?.likeCount || 0);
+      setCommentCount(stats?.commentCount || 0);
     } catch (err) {
       console.error(err);
       toast.error('Failed to load meme');
@@ -182,6 +184,7 @@ export default function MemeDetailsPage() {
             {/* IMAGE */}
             <div className="rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800">
               <img
+                autoFocus
                 src={meme.contentUrl || meme.imageUrl}
                 alt={meme.title}
                 className="w-full h-auto object-contain"
@@ -211,22 +214,36 @@ export default function MemeDetailsPage() {
 
               <div className="flex justify-between">
                 <div className="flex gap-3">
-                  <button onClick={handleLike}>
-                    <Heart
-                      className={`h-7 w-7 ${
-                        isLiked ? 'fill-red-500 text-red-500' : ''
-                      }`}
-                    />
-                  </button>
-                  <button onClick={() => {
-                    if(!requireAuth()) return;
-                    commentsRef.current?.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'start',
-                    });
-                  }}>
-                    <MessageCircle className="h-7 w-7" />
-                  </button>
+                  <div className='flex flex-row gap-2 items-center'>
+                    <button onClick={handleLike}>
+                      <Heart
+                        className={`h-7 w-7 ${
+                          isLiked ? 'fill-red-500 text-red-500' : ''
+                        }`}
+                      />
+                    </button>
+                    {likeCount > 0 && (
+                      <p className="font-semibold text-md mt-1">
+                        {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+                      </p>
+                    )}
+                  </div>
+                  <div className='flex flex-row items-center gap-2'>
+                    <button onClick={() => {
+                      if(!requireAuth()) return;
+                      commentsRef.current?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start',
+                      });
+                    }}>
+                      <MessageCircle className="h-7 w-7" />
+                    </button>
+                    {commentCount > 0 && (
+                      <p className="font-semibold text-md mt-1">
+                        {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
+                      </p>
+                    )}
+                  </div>
                   <button onClick={handleShare}>
                     <Share2 className="h-7 w-7" />
                   </button>
@@ -248,12 +265,6 @@ export default function MemeDetailsPage() {
                   </button>
                 </div>
               </div>
-
-              {likeCount > 0 && (
-                <p className="font-semibold text-md mt-3">
-                  {likeCount} {likeCount === 1 ? 'like' : 'likes'}
-                </p>
-              )}
             </div>
 
             {/* COMMENTS (OUTSOURCED) */}
