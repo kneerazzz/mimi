@@ -66,16 +66,10 @@ export function Navbar() {
             {user?.is_registered ? (
               // --- LOGGED IN NAV ---
               <>
-                <Button asChild variant={isActive('/create/ai') ? "secondary" : "ghost"} size="sm" className="gap-2">
-                  <Link href="/create/ai">
+                <Button asChild variant={pathname.startsWith('/create') ? "secondary" : "ghost"} size="sm" className="gap-2">
+                  <Link href="/create">
                     <Sparkles className="h-4 w-4 text-violet-500" />
-                    AI Mimi
-                  </Link>
-                </Button>
-                <Button asChild variant={isActive('/create/editor') ? "secondary" : "ghost"} size="sm" className="gap-2">
-                  <Link href="/create/editor">
-                    <Hammer className="h-4 w-4" />
-                    Create Mimi
+                    Create
                   </Link>
                 </Button>
                 <Button asChild variant={isActive('/templates') ? "secondary" : "ghost"} size="sm" className="gap-2">
@@ -95,21 +89,10 @@ export function Navbar() {
             ) : (
               // --- GUEST NAV (LOCKED MODE) ---
               <>
-                {/* Locked AI Mimi */}
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="gap-2 text-zinc-500 hover:text-zinc-400"
-                  onClick={handleLockedClick}
-                >
-                  <Lock className="h-3 w-3" />
-                  AI Mimi
-                </Button>
-
-                <Button asChild variant={isActive('/create/editor') ? "secondary" : "ghost"} size="sm" className="gap-2">
-                  <Link href="/create/editor">
-                    <Hammer className="h-4 w-4" />
-                    Create Mimi
+                <Button asChild variant={pathname.startsWith('/create') ? "secondary" : "ghost"} size="sm" className="gap-2">
+                  <Link href="/create">
+                    <Sparkles className="h-4 w-4 text-violet-500" />
+                    Create
                   </Link>
                 </Button>
 
@@ -212,15 +195,9 @@ export function Navbar() {
                   {user?.is_registered ? (
                     <>
                       <Button asChild variant="ghost" className="justify-start gap-3">
-                        <Link href="/create/ai" onClick={() => setMobileMenuOpen(false)}>
+                        <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
                           <Sparkles className="h-5 w-5 text-violet-500" />
-                          AI Mimi
-                        </Link>
-                      </Button>
-                      <Button asChild variant="ghost" className="justify-start gap-3">
-                        <Link href="/create/editor" onClick={() => setMobileMenuOpen(false)}>
-                          <Hammer className="h-5 w-5" />
-                          Create Mimi
+                          Create
                         </Link>
                       </Button>
                       <Button asChild variant="ghost" className="justify-start gap-3">
@@ -256,22 +233,10 @@ export function Navbar() {
                     </>
                   ) : (
                     <>
-                      {/* Locked Mobile Items */}
-                      <Button 
-                        variant="ghost" 
-                        className="justify-start gap-3 text-zinc-500"
-                        onClick={(e) => {
-                           handleLockedClick(e);
-                           setMobileMenuOpen(false);
-                        }}
-                      >
-                        <Lock className="h-4 w-4" />
-                        AI Mimi
-                      </Button>
                       <Button asChild variant="ghost" className="justify-start gap-3">
-                        <Link href="/create/editor" onClick={() => setMobileMenuOpen(false)}>
-                          <Hammer className="h-5 w-5" />
-                          Create Mimi
+                        <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
+                          <Sparkles className="h-5 w-5 text-violet-500" />
+                          Create
                         </Link>
                       </Button>
                       

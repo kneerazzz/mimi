@@ -67,7 +67,7 @@ export default function RandomTemplatesPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 py-6 px-30">
-      <div className="max-w-[1920px] mx-auto">
+      <div className="max-w-480 mx-auto">
         
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 top-15 bg-zinc-950/90 backdrop-blur-md z-10 py-4 border-b border-none">
@@ -81,7 +81,7 @@ export default function RandomTemplatesPage() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-linear-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">
                 The Void
               </h1>
               <p className="text-zinc-500 text-xl">
@@ -104,7 +104,7 @@ export default function RandomTemplatesPage() {
         {/* Content Area */}
         {loading ? (
           <div className="flex h-[60vh] items-center justify-center">
-            <Loader2 className="w-10 h-10 text-purple-500 animate-spin" />
+            <Loader2 className="w-10 h-10 text-zinc-500 animate-spin" />
           </div>
         ) : (
           <>

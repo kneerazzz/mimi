@@ -22,10 +22,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   getTemplateById, 
   templateByCategory 
-} from '@/services/templateService'; // Ensure path is correct
-import { toggleTemplateSave } from '@/services/templateService'; // Assuming you reuse this or have a specific template save
+} from '@/services/templateService'; 
+import { toggleTemplateSave } from '@/services/templateService'; 
 
-import TemplateCard from '../../../components/templates/templateCard';
+import TemplateCard from '@/components/templates/templateCard';// Ensure correct casing for component import
 import { useAuth } from '@/context/AuthContext';
 
 interface Template {
@@ -39,8 +39,8 @@ interface Template {
 }
 
 const masonryBreakpoints = {
-  default: 4,
-  1536: 4,
+  default: 5, // Increased for wider screens
+  1600: 4,
   1280: 3,
   1024: 3,
   768: 2,
@@ -67,7 +67,7 @@ export default function SingleTemplatePage() {
         setLoading(true);
         // Fetch Template Details
         const res = await getTemplateById(templateId);
-        const data = res.data?.template || res.data; // Handle response structure
+        const data = res.data?.template || res.data; 
         const savedStatus = res.data?.isSaved || false;
         
         setTemplate(data);
@@ -114,14 +114,12 @@ export default function SingleTemplatePage() {
       return;
     }
 
-
     const prevSaved = isSaved;
     setIsSaved(!isSaved); // Optimistic UI
     setSaveLoading(true);
 
     try {
       const finalTemplateId = template?._id || '';
-      // Assuming 'Template' is the contentType for saving templates
       await toggleTemplateSave(finalTemplateId); 
       toast.success(isSaved ? "Removed from saved" : "Template saved");
     } catch (error) {
@@ -136,7 +134,6 @@ export default function SingleTemplatePage() {
     if (!template) return;
     try {
       const response = await fetch(template.imageUrl);
-      console.log(response);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -176,23 +173,24 @@ export default function SingleTemplatePage() {
       
       {/* --- Header --- */}
       <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-[1920px] mx-auto flex items-center justify-between">
             <Button variant="ghost" size="icon" onClick={() => router.back()} className="hover:bg-zinc-800 rounded-full">
                 <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-semibold text-zinc-200 hidden md:block">{template.name}</h1>
-            <div className="w-10" /> {/* Spacer for centering */}
+            <h1 className="font-semibold text-zinc-200 hidden md:block text-lg">{template.name}</h1>
+            <div className="w-10" /> 
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 mt-8">
+      <div className="max-w-[1920px] mx-auto px-6 lg:px-12 mt-8">
         
         {/* --- Main Content Split --- */}
+        {/* Changed Grid: 9 cols for Image, 3 cols for Sidebar (Wide Layout) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 mb-20">
             
-            {/* Left: Image Display */}
-            <div className="lg:col-span-7">
-                <div className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-900/50 shadow-2xl">
+            {/* Left: Image Display (Larger Area) */}
+            <div className="lg:col-span-9">
+                <div className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-900/30 shadow-2xl flex items-center justify-center min-h-[500px] lg:min-h-[700px]">
                     {/* Checkerboard pattern for transparent images */}
                     <div className="absolute inset-0 opacity-10" 
                          style={{ backgroundImage: 'radial-gradient(#444 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
@@ -201,73 +199,77 @@ export default function SingleTemplatePage() {
                     <img 
                         src={template.imageUrl} 
                         alt={template.name} 
-                        className="relative z-10 w-full h-auto max-h-[70vh] object-contain mx-auto"
+                        className="relative z-10 w-full h-auto max-h-[85vh] object-contain"
                     />
                 </div>
             </div>
 
-            {/* Right: Actions & Info */}
-            <div className="lg:col-span-5 flex flex-col justify-center space-y-8">
-                <div>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-medium border border-purple-500/20">
-                            {template.category}
-                        </span>
-                        {template.subCategory && template.subCategory !== 'General' && (
-                             <span className="px-3 py-1 rounded-full bg-zinc-800 text-zinc-400 text-xs font-medium border border-zinc-700">
-                                {template.subCategory}
+            {/* Right: Actions & Info (Sticky Sidebar) */}
+            <div className="lg:col-span-3">
+                <div className="sticky top-24 flex flex-col space-y-8 bg-zinc-900/20 p-6 rounded-3xl border border-zinc-800/50">
+                    <div>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            <span className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-400 text-xs font-bold border border-purple-500/20 uppercase tracking-wider">
+                                {template.category}
                             </span>
-                        )}
+                            {template.subCategory && template.subCategory !== 'General' && (
+                                <span className="px-3 py-1 rounded-full bg-zinc-800 text-zinc-400 text-xs font-medium border border-zinc-700">
+                                    {template.subCategory}
+                                </span>
+                            )}
+                        </div>
+                        
+                        <h1 className="text-3xl font-bold text-zinc-100 leading-tight mb-4">
+                            {template.name}
+                        </h1>
+                        <p className="text-zinc-400 text-sm leading-relaxed">
+                            A blank canvas for your chaotic thoughts. Use this template to create something legendary.
+                        </p>
                     </div>
-                    
-                    <h1 className="text-3xl md:text-4xl font-bold text-zinc-100 leading-tight mb-4">
-                        {template.name}
-                    </h1>
-                    <p className="text-zinc-500">
-                        Ready to cook? Add your text and unleash this meme into the void.
-                    </p>
-                </div>
 
-                {/* Primary Actions */}
-                <div className="space-y-3">
-                    <Button 
-                        onClick={handleUseTemplate}
-                        size="lg" 
-                        className="w-full h-14 text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-lg shadow-purple-500/20"
-                    >
-                        <Brush className="w-5 h-5 mr-2" />
-                        Create Meme
-                    </Button>
-                    
-                    <div className="grid grid-cols-3 gap-3">
-                         <Button 
-                            variant="outline" 
-                            size="lg" 
-                            onClick={handleSave}
-                            disabled={saveLoading}
-                            className={`h-12 border-zinc-700 hover:bg-zinc-800 ${isSaved ? 'text-purple-400 border-purple-500/50 bg-purple-500/10' : 'text-zinc-300'}`}
-                        >
-                            <Bookmark className={`w-5 h-5 mr-2 ${isSaved ? 'fill-current' : ''}`} />
-                            {isSaved ? 'Saved' : 'Save'}
-                        </Button>
+                    {/* Primary Actions */}
+                    <div className="space-y-4">
                         <Button 
-                            variant="outline" 
+                            onClick={handleUseTemplate}
                             size="lg" 
-                            onClick={handleDownload}
-                            className="h-12 border-zinc-700 hover:bg-zinc-800 text-zinc-300"
+                            className="w-full cursor-pointer h-14 text-lg font-bold bg-white text-black hover:bg-zinc-200 shadow-xl shadow-white/5 transition-transform active:scale-95 rounded-xl"
                         >
-                            <Download className="w-5 h-5 mr-2" />
-                            Download
+                            <Brush className="w-5 h-5 mr-2" />
+                            Create Meme
                         </Button>
-                        <Button 
-                            variant="outline" 
-                            size="lg" 
-                            onClick={handleShare}
-                            className="h-12 border-zinc-700 hover:bg-zinc-800 text-zinc-300"
-                        >
-                            <Share2 className="w-5 h-5 mr-2" />
-                            Share
-                        </Button>
+                        
+                        {/* Secondary Actions with Zinc Styling */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <Button 
+                                variant="outline" 
+                                size="lg" 
+                                onClick={handleSave}
+                                disabled={saveLoading}
+                                className={`cursor-pointer h-12 border-0 rounded-xl transition-colors ${
+                                    isSaved 
+                                    ? 'bg-white-500/20 text-white-400 hover:bg-white-500/30' 
+                                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'
+                                }`}
+                            >
+                                <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                size="lg" 
+                                onClick={handleDownload}
+                                className="h-12 cursor-pointer border-0 bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 rounded-xl"
+                            >
+                                <Download className="w-5 h-5" />
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                size="lg" 
+                                onClick={handleShare}
+                                className="h-12 cursor-pointer border-0 bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 rounded-xl"
+                            >
+                                <Share2 className="w-5 h-5" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -276,9 +278,9 @@ export default function SingleTemplatePage() {
         {/* --- Recommendations --- */}
         {related.length > 0 && (
             <div className="border-t border-zinc-800 pt-10">
-                <div className="flex items-center gap-2 mb-6">
-                    <Sparkles className="w-5 h-5 text-yellow-500" />
-                    <h2 className="text-2xl font-bold text-zinc-200">More like this</h2>
+                <div className="flex items-center gap-2 mb-8">
+                    <Sparkles className="w-6 h-6 text-purple-500" />
+                    <h2 className="text-2xl font-bold text-zinc-100">Similar Vibes</h2>
                 </div>
 
                 <Masonry
@@ -287,11 +289,12 @@ export default function SingleTemplatePage() {
                     columnClassName="my-masonry-grid_column"
                 >
                     {related.map((t) => (
-                        <TemplateCard 
-                            key={t._id} 
-                            template={t} 
-                            onUse={(tmpl) => router.push(`/create/editor?templateId=${tmpl.templateId}`)} 
-                        />
+                        <div key={t._id} className="mb-6">
+                             <TemplateCard 
+                                template={t} 
+                                onUse={(tmpl) => router.push(`/create/editor?templateId=${tmpl.templateId}`)} 
+                            />
+                        </div>
                     ))}
                 </Masonry>
             </div>

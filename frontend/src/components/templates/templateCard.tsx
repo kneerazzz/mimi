@@ -1,9 +1,10 @@
 'use client';
 
-import { Download, Plus, ArrowUpRight, Share } from "lucide-react";
+import { Download, Plus, ArrowUpRight, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation"
+import Link from "next/link";
 // Match this interface to your API response
 export interface Template {
   _id: string;
@@ -22,11 +23,6 @@ interface TemplateCardProps {
 export default function TemplateCard({ template, onUse }: TemplateCardProps) {
   
   const router = useRouter();
-  const handleDownload = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Open image in new tab for easy saving
-    window.open(template.imageUrl, '_blank');
-  };
 
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -42,19 +38,15 @@ export default function TemplateCard({ template, onUse }: TemplateCardProps) {
   };
 
   return (
-    <div className="group relative break-inside-avoid mb-4 rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-all duration-300 hover:shadow-xl hover:shadow-black/50">
-
-      {/* 1. Image Display */}
+    <div className="cursor-pointer group relative break-inside-avoid mb-4 rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-all duration-300 hover:shadow-xl hover:shadow-black/50">
       <img 
-        src={template.imageUrl} 
-        alt={template.name}
-        onClick={() => router.push(`/templates/${template.templateId}`)}
-        className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
-        loading="lazy"
+          src={template.imageUrl} 
+          alt={template.name}
+          className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+          loading="lazy"
       />
-
       {/* 2. Hover Overlay */}
-      <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-4">
+      <Link href={`/templates/${template.templateId}`} className="absolute inset-0 bg-linear-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-4">
         
         {/* Template Name */}
         <p className="text-zinc-100 font-bold text-sm line-clamp-2 mb-3 drop-shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
@@ -79,19 +71,19 @@ export default function TemplateCard({ template, onUse }: TemplateCardProps) {
                 size="icon"
                 className="h-9 w-9 cursor-pointer bg-white/10 hover:bg-white/20 text-white border-0 backdrop-blur-md"    
             >
-                <Share className="w-4 h-4" />
+                <Share2 className="w-4 h-4" />
             </Button>
              <Button 
                 size="icon" 
                 variant="secondary"
                 className="h-9 w-9 cursor-pointer bg-white/10 hover:bg-white/20 text-white border-0 backdrop-blur-md"
-                onClick={handleDownload}
-                title="Open full image"
+                onClick={() => router.push(`/templates/${template.templateId}`)}
+                title="Open Template"
             >
                 <ArrowUpRight className="w-4 h-4" />
             </Button>
         </div>
-      </div>
+      </Link>
       
       {/* 3. Category Badge (Optional - visible always or on hover) */}
       {/* <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity">
