@@ -4,7 +4,7 @@ import { verifyJwt } from "../middlewares/auth.middleware.js"
 
 const router = Router();
 
-router.route("/toggle-save-template").patch(
+router.route("/toggle-save-template/:templateId").patch(
     verifyJwt,
     toggleSave
 )

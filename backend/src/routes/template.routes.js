@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllUserTemplates, getRandomTemplates, getSingleTemplate, getSingleUserTemplate, getTemplatesByCategory, uploadTemplate } from "../controllers/template.controller.js";
+import { getAllUserTemplates, getRandomTemplates, getSingleTemplate, getSingleUserTemplate, getTemplatesByCategory, uploadTemplate, searchTemplates } from "../controllers/template.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
 const router = Router();
@@ -9,7 +9,7 @@ router.route("/upload-template").post(
     uploadTemplate
 )
 
-router.route("/get-single-user-template").get(
+router.route("/get-single-user-template/:templateId").get(
     getSingleUserTemplate
 )
 
@@ -17,7 +17,7 @@ router.route("/get-user-templates").get(
     getAllUserTemplates
 )
 
-router.route("/get-template-details").get(
+router.route("/get-template-details/:templateId").get(
     getSingleTemplate
 )
 
@@ -27,6 +27,10 @@ router.route("/get-category-templates").get(
 
 router.route("/get-random-templates").get(
     getRandomTemplates
+)
+
+router.route("/search-templates").get(
+    searchTemplates
 )
 
 export default router;

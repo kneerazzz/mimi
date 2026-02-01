@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 
 
 const toggleSave = asyncHandler(async(req, res) => {
-    const { templateId } = req.body;
+    const { templateId } = req.params;;
     if(!templateId) {
         throw new ApiError(400, "template Id required!")
     }

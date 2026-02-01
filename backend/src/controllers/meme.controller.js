@@ -17,51 +17,108 @@ const MAX_MEMES = 10000;
  * @param {ObjectId} userId - The registered user's ID.
  * @param {string} contentType - The expected content type for the feed (MemeFeedPost).
  */
+import mongoose from "mongoose"; // 👈 Don't forget this import!
+
+// ... imports
+
 const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") => {
     if (!feed || feed.length === 0) return []; 
     
+    // 1. Get IDs from the feed (These are usually ObjectIds already)
     const tempContentIds = feed.map(post => post._id);
     const permanentRedditIds = feed.map(post => post.redditPostId);
     
-    // Find permanent clones to check for interactions there too
-    const permanentClones = await CreatedMeme.find({ originalRedditId: { $in: permanentRedditIds } }).select('_id originalRedditId');
+    // 2. Find Clones (Permanent versions)
+    const permanentClones = await CreatedMeme.find({ 
+        originalRedditId: { $in: permanentRedditIds } 
+    }).select('_id originalRedditId');
     
     const cloneMap = new Map();
+    // Store as STRING in map for easy lookup later
     permanentClones.forEach(clone => cloneMap.set(clone.originalRedditId, clone._id.toString()));
-    const permanentCloneMDBIds = Array.from(cloneMap.values());
     
-    const allInteractionIds = [...tempContentIds, ...permanentCloneMDBIds];
+    // 3. PREPARE IDS FOR AGGREGATION (CRITICAL STEP)
+    // We must convert everything to mongoose.Types.ObjectId
+    const validTempIds = tempContentIds.map(id => new mongoose.Types.ObjectId(id));
+    const validPermIds = Array.from(cloneMap.values()).map(id => new mongoose.Types.ObjectId(id));
+    
+    const allInteractionObjectIds = [...validTempIds, ...validPermIds];
 
-    const [userLikes, userSaves] = await Promise.all([
-        Like.find({
+    // 4. Run Aggregations with ObjectIds
+    const [userLikes, userSaves, likeCounts, commentCounts] = await Promise.all([
+        userId ? Like.find({
             user: userId,
-            contentId: { $in: allInteractionIds },
+            contentId: { $in: allInteractionObjectIds }, // find() is forgiving with types
             contentType: { $in: ["MemeFeedPost", "CreatedMeme"] } 
-        }).select("contentId"),
-        SavedMeme.find({
-            user: userId,
-            contentId: { $in: allInteractionIds },
-            contentType: { $in: ["MemeFeedPost", "CreatedMeme"] }
-        }).select("contentId")
-    ])
+        }).select("contentId") : [],
 
+        userId ? SavedMeme.find({
+            user: userId,
+            contentId: { $in: allInteractionObjectIds },
+            contentType: { $in: ["MemeFeedPost", "CreatedMeme"] }
+        }).select("contentId") : [],
+
+        // Aggregation requires strict types!
+        Like.aggregate([
+            { $match: { 
+                contentId: { $in: allInteractionObjectIds }, 
+                contentType: { $in: ["MemeFeedPost", "CreatedMeme"] } 
+            }},
+            { $group: { _id: "$contentId", count: { $sum: 1 } } }
+        ]),
+
+        Comment.aggregate([
+             { $match: { 
+                contentId: { $in: allInteractionObjectIds }, 
+                contentType: { $in: ["MemeFeedPost", "CreatedMeme"] } 
+            }},
+            { $group: { _id: "$contentId", count: { $sum: 1 } } }
+        ])
+    ]);
+
+    // Debugging: Uncomment to verify if backend is finding anything
+    // console.log("Found Comments:", commentCounts); 
+
+    // 5. Lookup Maps (Convert ObjectIds back to Strings for Map keys)
     const likedIds = new Set(userLikes.map(like => like.contentId.toString()));
     const savedIds = new Set(userSaves.map(save => save.contentId.toString()));
+    
+    const likeCountMap = new Map();
+    likeCounts.forEach(item => likeCountMap.set(item._id.toString(), item.count));
 
+    const commentCountMap = new Map();
+    commentCounts.forEach(item => commentCountMap.set(item._id.toString(), item.count));
+
+    // 6. Merge Data
     return feed.map(post => {
         const tempMDBId = post._id.toString();
         const permRedditId = post.redditPostId;
-        const permanentCloneId = cloneMap.get(permRedditId);
+        const permanentCloneId = cloneMap.get(permRedditId); // This is a string
 
         const isLiked = likedIds.has(tempMDBId) || (permanentCloneId && likedIds.has(permanentCloneId));
         const isSaved = savedIds.has(tempMDBId) || (permanentCloneId && savedIds.has(permanentCloneId));
 
-        // Handle both Mongoose Documents and Aggregation Objects
+        // Sum counts from both Temporary and Permanent IDs
+        const localLikeCount = (likeCountMap.get(tempMDBId) || 0) + 
+                             (permanentCloneId ? (likeCountMap.get(permanentCloneId) || 0) : 0);
+                             
+        const localCommentCount = (commentCountMap.get(tempMDBId) || 0) + 
+                                (permanentCloneId ? (commentCountMap.get(permanentCloneId) || 0) : 0);
+
         const postObject = post.toObject ? post.toObject() : post;
         
-        return { ...postObject, isLiked, isSaved }
+        return { 
+            ...postObject, 
+            isLiked, 
+            isSaved,
+            stats: {
+                likeCount: localLikeCount,
+                commentCount: localCommentCount
+            }
+        }
     })
 }
+
 const cacheMemeFeed = async() => {
     try {
         const freshMemes = await fetchMemeFeedFromReddit(150);

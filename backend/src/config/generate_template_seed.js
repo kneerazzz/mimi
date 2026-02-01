@@ -39,6 +39,9 @@ const generateTemplateSeedFile = async () => {
                 .map(word => capitalize(word))
                 .join(' ');
             
+            const pathParts = CLOUDINARY_TEMPLATE_FOLDER.split('/');
+            const category = pathParts.length > 1 ? capitalize(pathParts[0]) : 'Other';
+            const subCategory = pathParts.length > 1 ? capitalize(pathParts[1].replace(/_/g, ' ')) : 'General';
             return {
                 // Use UUID as the stable, unique template ID
                 templateId: templateUUID, 
@@ -46,7 +49,8 @@ const generateTemplateSeedFile = async () => {
                 // CRITICAL DATA
                 imageUrl: asset.imageUrl,
                 name: cleanedName.slice(0, Math.max(0, cleanedName.length-7)),
-                
+                category,
+                subCategory,
                 // DATA TO BE FILLED MANUALLY LATER
                 emotionTags: [],      // Empty, pending future AI tagging
                 textRegions: [],      // Empty, pending manual definition (e.g., Top/Bottom coords)

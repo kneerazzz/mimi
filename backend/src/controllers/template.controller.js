@@ -37,7 +37,7 @@ const uploadTemplate = asyncHandler(async(req, res) => {
 })
 
 const getSingleUserTemplate = asyncHandler(async(req, res) => {
-    const { templateId } = req.body;
+    const { templateId } = req.params;
     if(!templateId){
         throw new ApiError(400, "Template id required")
     }
@@ -74,7 +74,7 @@ const getAllUserTemplates = asyncHandler(async(req, res) => {
 })
 
 const getSingleTemplate = asyncHandler(async(req, res) => {
-    const { templateId } = req.body;
+    const { templateId } = req.params;
     if(!templateId){
         throw new ApiError(400, "give template id gng")
     }
@@ -147,7 +147,7 @@ const getTemplatesByCategory = asyncHandler(async(req, res) => {
 })
 
 const getRandomTemplates = asyncHandler(async(req, res) => {
-    const { count = 100 } = req.query;
+    const { count = 30 } = req.query;
     const parsedCount = parseInt(count);
 
     const randomTemplates = await Template.aggregate([
@@ -168,11 +168,51 @@ const getRandomTemplates = asyncHandler(async(req, res) => {
     )
 })
 
+const searchTemplates = asyncHandler(async (req, res) => {
+    const { q, page = 1, limit = 40 } = req.query;
+
+    if (!q) {
+        throw new ApiError(400, "Search query 'q' is required");
+    }
+
+    const parsedLimit = parseInt(limit);
+    const parsedPage = parseInt(page);
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    const query = {
+        $text: { $search: q }
+    };
+
+    const totalTemplates = await Template.countDocuments(query);
+    const totalPages = Math.ceil(totalTemplates / parsedLimit);
+
+    const templates = await Template.find(query)
+        .skip(skip)
+        .limit(parsedLimit)
+        .select('-__v -updatedAt')
+        .exec();
+
+    if (templates.length === 0) {
+        return res.status(404).json(new ApiResponse(404, [], "No templates found for your search."));
+    }
+
+    return res.status(200).json(new ApiResponse(200, {
+        templates,
+        pagination: {
+            totalTemplates,
+            totalPages,
+            currentPage: parsedPage,
+            limit: parsedLimit
+        }
+    }, "Templates searched successfully"));
+});
+
 export {
     uploadTemplate,
     getSingleUserTemplate,
     getAllUserTemplates,
     getSingleTemplate,
     getTemplatesByCategory,
-    getRandomTemplates
+    getRandomTemplates,
+    searchTemplates
 }
