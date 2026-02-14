@@ -34,7 +34,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   // Basic Metadata
   title: {
-    default: "Mimi - Create & Share Viral Memes",
+    default: "Mimi - Create & Share Memes",
     template: "%s | Mimi",
   },
   description:
@@ -45,15 +45,15 @@ export const metadata: Metadata = {
     "meme community", "share memes", "trending memes", "custom memes",
     "meme editor", "free meme maker", "online meme creator", "meme builder",
   ],
-  authors: [{ name: "Mimi Team", url: "https://mimi.vercel.app" }],
-  creator: "Mimi",
-  publisher: "Mimi",
+  authors: [{ name: "kneerazzz", url: "https://mimi-create.vercel.app" }],
+  creator: "kneerazzz",
+  publisher: "kneerazzz",
   
   // App Configuration
   applicationName: "Mimi",
   generator: "Next.js",
   referrer: "origin-when-cross-origin",
-  metadataBase: new URL("https://mimi.vercel.app"),
+  metadataBase: new URL("https://mimi-create.vercel.app"),
 
   // Robots
   robots: {
@@ -73,16 +73,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://mimi.vercel.app",
+    url: "https://mimi-create.vercel.app",
     siteName: "Mimi",
-    title: "Mimi - Create & Share Viral Memes",
+    title: "Mimi - Create & Share Memes",
     description: "The ultimate meme creation platform. Create viral memes with our free meme maker.",
     images: [
       {
         url: "/og-image.png", // Next.js finds this in public/og-image.png
         width: 1200,
         height: 630,
-        alt: "Mimi - Create & Share Viral Memes",
+        alt: "Mimi - Create & Share Memes",
         type: "image/png",
       },
       {
@@ -98,7 +98,7 @@ export const metadata: Metadata = {
   // Twitter
   twitter: {
     card: "summary_large_image",
-    title: "Mimi - Create & Share Viral Memes",
+    title: "Mimi - Create & Share Memes",
     description: "Create viral memes with my free meme maker.",
     creator: "@kneerazzz",
     site: "@kneerazzz",
@@ -141,9 +141,9 @@ export const metadata: Metadata = {
   },
 
   alternates: {
-    canonical: "https://mimi.vercel.app",
+    canonical: "https://mimi-create.vercel.app",
     languages: {
-      "en-US": "https://mimi.vercel.app",
+      "en-US": "https://mimi-create.vercel.app",
     },
   },
 
@@ -180,13 +180,13 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebApplication",
               "name": "Mimi",
-              "url": "https://mimi.vercel.app",
+              "url": "https://mimi-create.vercel.app",
               "applicationCategory": "EntertainmentApplication",
               "operatingSystem": "Any",
               "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
               "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "1000" },
               "description": "The ultimate meme creation and sharing platform.",
-              "screenshot": "https://mimi.vercel.app/screenshot.png",
+              "screenshot": "https://mimi-create.vercel.app/screenshot.png",
               "author": { "@type": "Organization", "name": "Mimi Team" }
             }),
           }}
