@@ -165,7 +165,7 @@ export default function LatestMemesPage() {
       </div>
 
       {/* --- Header Section --- */}
-      <div className="sticky top-16 border-b border-zinc-900 bg-zinc-950/95 backdrop-blur-xl z-20">
+      <div className="top-16 border-b border-zinc-900 bg-zinc-950/95 backdrop-blur-xl z-20">
         <div className="max-w-480 mx-auto px-6 py-6">
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

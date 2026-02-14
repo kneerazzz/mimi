@@ -248,12 +248,25 @@ export function Navbar() {
                           Explore
                         </Link>
                       </Button>
-                      <Button asChild variant="ghost" className="justify-start gap-3">
-                        <Link href="/feed/trending" onClick={() => setMobileMenuOpen(false)}>
-                          <Star className="h-5 w-5" />
-                          Features
-                        </Link>
-                      </Button>
+                      <form onSubmit={handleUserSearch} className="flex items-center gap-2 ml-4 pl-4 border-l border-zinc-700">
+                        <div className="relative">
+                          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                          <Input
+                            placeholder="Search user..."
+                            value={searchUsername}
+                            onChange={(e) => setSearchUsername(e.target.value)}
+                            className="pl-8 h-9 bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-500 text-sm w-40"
+                          />
+                        </div>
+                        <Button 
+                          type="submit"
+                          disabled={!searchUsername.trim()}
+                          size="sm"
+                          className="h-9 px-3"
+                        >
+                          Go
+                        </Button>
+                      </form>
                       <Separator className="bg-zinc-800" />
                       <Button asChild variant="ghost" className="justify-start gap-3">
                         <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
