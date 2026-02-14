@@ -1,0 +1,49 @@
+# Mimi - Robots.txt
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow private pages
+Disallow: /api/
+Disallow: /admin/
+Disallow: /settings/
+Disallow: /_next/
+Disallow: /u/*/settings
+
+# Allow specific paths
+Allow: /api/og-image
+
+# Crawl delay (optional, adjust as needed)
+Crawl-delay: 0.5
+
+# Sitemaps
+Sitemap: https://mimi.app/sitemap.xml
+Sitemap: https://mimi.app/sitemap-templates.xml
+Sitemap: https://mimi.app/sitemap-memes.xml
+Sitemap: https://mimi.app/sitemap-users.xml
+
+# Popular crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+User-agent: facebot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
