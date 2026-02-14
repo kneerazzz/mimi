@@ -14,39 +14,32 @@ const Footer = () => {
                 <div className="flex flex-col gap-3 sm:gap-6">
                     <h2 className="text-xs sm:text-sm font-semibold text-white">Features</h2>
                     <div className="flex flex-col gap-2 text-xs sm:text-sm">
-                        <a href="/create" className="text-gray-700 hover:text-gray-50">Create Mimi</a>
-                        <a href="/create-ai" className="text-gray-700 hover:text-gray-50">Create AI Mimi</a>
+                        <a href="/create" className="text-gray-700 hover:text-gray-50">Create Meme</a>
                         <a href="/feed" className="text-gray-700 hover:text-gray-50">Feed</a>
+                        <a href="/feed/trending" className="text-gray-700 hover:text-gray-50">Trending</a>
+                        <a href="/feed/new" className="text-gray-700 hover:text-gray-50">Latest</a>
                         <a href="/templates" className="text-gray-700 hover:text-gray-50">Templates</a>
-                        <a href="/rats" className="text-gray-700 hover:text-gray-50">Rats</a>
-                        <a href="/upload-templates" className="text-gray-700 hover:text-gray-50">Upload Templates</a>
-                        <a href="/mobile" className="text-gray-700 hover:text-gray-50">Mobile</a>
+                        <a href="/explore" className="text-gray-700 hover:text-gray-50">Explore</a>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-3 sm:gap-6">
                     <h2 className="text-xs sm:text-sm font-semibold text-white">Product</h2>
                     <div className="flex flex-col gap-2 text-xs sm:text-sm">
-                        <a href="/pricing" className="text-gray-700 hover:text-gray-50">Pricing</a>
-                        <a href="/method" className="text-gray-700 hover:text-gray-50">Method</a>
-                        <a href="/integration" className="text-gray-700 hover:text-gray-50">Integrations</a>
-                        <a href="/changelog" className="text-gray-700 hover:text-gray-50">Changelog</a>
-                        <a href="/documentation" className="text-gray-700 hover:text-gray-50">Documentation</a>
-                        <a href="/download" className="text-gray-700 hover:text-gray-50">Download</a>
-                        <a href="/switch" className="text-gray-700 hover:text-gray-50">Switch</a>
+                        <a href="/features" className="text-gray-700 hover:text-gray-50">Features</a>
+                        <a href="/upcoming" className="text-gray-700 hover:text-gray-50">Upcoming</a>
+                        <a href="/create/template" className="text-gray-700 hover:text-gray-50">Upload Template</a>
+                        <a href="/create/editor" className="text-gray-700 hover:text-gray-50">Editor</a>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-3 sm:gap-6">
-                    <h2 className="text-xs sm:text-sm font-semibold text-white">Company</h2>
+                    <h2 className="text-xs sm:text-sm font-semibold text-white">Account</h2>
                     <div className="flex flex-col gap-2 text-xs sm:text-sm">
-                        <a href="/about" className="text-gray-700 hover:text-gray-50">About</a>
-                        <a href="/customers" className="text-gray-700 hover:text-gray-50">Customers</a>
-                        <a href="/careers" className="text-gray-700 hover:text-gray-50">Careers</a>
-                        <a href="/now" className="text-gray-700 hover:text-gray-50">Now</a>
-                        <a href="/readme" className="text-gray-700 hover:text-gray-50">README</a>
-                        <a href="/quality" className="text-gray-700 hover:text-gray-50">Quality</a>
-                        <a href="/brand" className="text-gray-700 hover:text-gray-50">Brand</a>
+                        <a href="/profile" className="text-gray-700 hover:text-gray-50">Profile</a>
+                        <a href="/settings/account" className="text-gray-700 hover:text-gray-50">Settings</a>
+                        <a href="/settings/password" className="text-gray-700 hover:text-gray-50">Password</a>
+                        <a href="/register" className="text-gray-700 hover:text-gray-50">Register</a>
                     </div>
                 </div>
 
@@ -54,13 +47,10 @@ const Footer = () => {
                 <div className="flex flex-col gap-3 sm:gap-6">
                     <h2 className="text-xs sm:text-sm font-semibold text-white">Resources</h2>
                     <div className="flex flex-col gap-2 text-xs sm:text-sm">
-                        <a href="/developers" className="text-gray-700 hover:text-gray-50">Developer</a>
-                        <a href="/status" className="text-gray-700 hover:text-gray-50">Status</a>
-                        <a href="/startups" className="text-gray-700 hover:text-gray-50">Startups</a>
-                        <a href="/reports" className="text-gray-700 hover:text-gray-50">Reports</a>
-                        <a href="/dpa" className="text-gray-700 hover:text-gray-50">DPA</a>
-                        <a href="/privacy" className="text-gray-700 hover:text-gray-50">Privacy</a>
-                        <a href="/terms" className="text-gray-700 hover:text-gray-50">Terms</a>
+                        <a href="/" className="text-gray-700 hover:text-gray-50">Home</a>
+                        <a href="/features" className="text-gray-700 hover:text-gray-50">Features</a>
+                        <a href="/upcoming" className="text-gray-700 hover:text-gray-50">What's New</a>
+                        <a href="/explore" className="text-gray-700 hover:text-gray-50">Explore</a>
                     </div>
                 </div>
 
@@ -81,7 +71,7 @@ const Footer = () => {
 
             {/* BOTTOM: Copyright */}
             <div className="text-center text-xs sm:text-sm text-white/40 pb-4 sm:pb-6">
-                © {new Date().getFullYear()} SkillSprint. All rights reserved.
+                © {new Date().getFullYear()} Mimi. All rights reserved.
             </div>
         </footer>
 
