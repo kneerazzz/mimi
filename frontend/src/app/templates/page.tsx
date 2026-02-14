@@ -66,25 +66,25 @@ export default function RandomTemplatesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 py-6 px-30">
-      <div className="max-w-480 mx-auto">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-10xl mx-auto">
         
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 top-15 bg-zinc-950/90 backdrop-blur-md z-10 py-4 border-b border-none">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 top-15 bg-zinc-950/90 backdrop-blur-md z-10 py-3 sm:py-4 border-b border-none">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => router.back()}
-              className="hover:bg-zinc-800 rounded-xl cursor-pointer"
+              className="hover:bg-zinc-800 rounded-xl cursor-pointer h-8 w-8 sm:h-10 sm:w-10"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold bg-linear-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-linear-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">
                 The Void
               </h1>
-              <p className="text-zinc-500 text-xl">
+              <p className="text-xs sm:text-sm md:text-base text-zinc-500">
                 Infinite random templates. Good luck.
               </p>
             </div>
@@ -94,7 +94,7 @@ export default function RandomTemplatesPage() {
             onClick={handleRefresh} 
             disabled={refreshing || loading}
             variant="outline"
-            className="gap-2 cursor-pointer border-zinc-700 hover:bg-zinc-800 text-zinc-300"
+            className="gap-2 cursor-pointer border-zinc-700 hover:bg-zinc-800 text-zinc-300 h-9 sm:h-10 text-sm sm:text-base w-full sm:w-auto"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
             Shuffle

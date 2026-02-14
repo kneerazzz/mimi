@@ -71,17 +71,24 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                       transform: `translate(-50%, -50%) rotate(${layer.rotation}deg)`,
                       opacity: layer.opacity / 100,
                       cursor: isDragging ? 'grabbing' : 'grab',
-                      zIndex: selectedId === layer.id ? 50 : 10
+                      zIndex: selectedId === layer.id ? 50 : 10,
+                      width: `${layer.width}px`,
+                      height: `${layer.height}px`,
                     }}
-                    className={`group hover:scale-[1.02] transition-transform ${selectedId === layer.id ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-transparent' : 'hover:ring-1 hover:ring-white/30'}`}
+                    className={`group hover:scale-[1.02] transition-transform ${
+                      selectedId === layer.id
+                        ? 'ring-1 ring-zinc-100/80 shadow-lg shadow-black/40 rounded-md'
+                        : 'hover:ring-1 hover:ring-zinc-400/60 rounded-md'
+                    }`}
                   >
                     <img
                       src={layer.imageUrl}
                       alt="Layer"
                       style={{
-                        width: `${layer.width}px`,
-                        height: `${layer.height}px`,
-                        objectFit: 'contain',
+                        width: '100%',
+                        height: '100%',
+                        // stretch to match the resized box so memes can be intentionally distorted
+                        objectFit: 'fill',
                         pointerEvents: 'none'
                       }}
                     />
@@ -96,6 +103,9 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                 padding: `${text.backgroundPadding}px`,
                 borderRadius: `${text.backgroundRadius}px`,
               } : {};
+
+              const hasExplicitWidth = typeof text.width === 'number' && text.width > 0;
+              const hasExplicitHeight = typeof text.height === 'number' && text.height > 0;
 
               return (
                 <div
@@ -121,11 +131,18 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     ...bgStyle,
                     cursor: isDragging ? 'grabbing' : 'grab',
                     whiteSpace: 'pre-wrap',
-                    width: 'max-content',
+                    width: hasExplicitWidth ? `${text.width}px` : 'max-content',
                     maxWidth: '100%',
+                    ...(hasExplicitHeight ? { maxHeight: `${text.height}px` } : {}),
+                    // allow purple box resize to crop text content
+                    overflow: 'hidden',
                     zIndex: selectedId === text.id ? 50 : 10
                   }}
-                  className={`group hover:scale-[1.02] transition-transform ${selectedId === text.id ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-transparent' : 'hover:ring-1 hover:ring-white/30'}`}
+                  className={`group hover:scale-[1.02] transition-transform ${
+                    selectedId === text.id
+                      ? 'ring-1 ring-zinc-100/80 shadow-lg shadow-black/40 rounded-md'
+                      : 'hover:ring-1 hover:ring-zinc-400/60 rounded-md'
+                  }`}
                 >
                   {formatText(text.text, text.caseFormat)}
                 </div>

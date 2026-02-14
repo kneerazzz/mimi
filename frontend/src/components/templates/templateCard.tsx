@@ -1,6 +1,6 @@
 'use client';
 
-import { Download, Plus, ArrowUpRight, Share2 } from "lucide-react";
+import { Plus, ArrowUpRight, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation"
@@ -24,6 +24,12 @@ export default function TemplateCard({ template, onUse }: TemplateCardProps) {
   
   const router = useRouter();
 
+  const handleUseTemplate = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/create/editor?templateId=${template.templateId}`);
+  };
+
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -42,7 +48,7 @@ export default function TemplateCard({ template, onUse }: TemplateCardProps) {
       <img 
           src={template.imageUrl} 
           alt={template.name}
-          className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+          className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105 block"
           loading="lazy"
       />
       {/* 2. Hover Overlay */}
@@ -56,7 +62,7 @@ export default function TemplateCard({ template, onUse }: TemplateCardProps) {
         {/* Action Buttons */}
         <div className="flex gap-2 pt-3 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 delay-75">
             <Button 
-                onClick={() => onUse(template)}
+                onClick={handleUseTemplate}
                 title="Create Mimi With Template"
                 className="flex-1 cursor-pointer bg-zinc-600 hover:bg-zinc-700 text-white font-semibold h-9 rounded-lg text-xs"
             >

@@ -1,6 +1,8 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+// 1. Import useRouter
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,10 +12,28 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
-import { Heart, MoreHorizontal, Bookmark, Download, Share2, MessageCircle, Eye, TrendingUp, Award, Play, Pause, Volume2, VolumeX, Maximize2 } from 'lucide-react';
-import { toggleLike, toggleSave, ContentType } from '@/services/memeService';
+import { useDownload } from '@/hooks/useDownload';
+import {
+  Heart,
+  MoreHorizontal,
+  Bookmark,
+  Download,
+  Share2,
+  MessageCircle,
+  Eye,
+  TrendingUp,
+  Play,
+  Volume2,
+  VolumeX,
+  Maximize2,
+  Edit2,
+  Trash2,
+} from 'lucide-react';
+import { toggleLike, toggleSave } from '@/services/memeService';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { EditMemeDialog } from './EditMemeDialog';
+import { DeleteMemeDialog } from './DeleteMemeDialog';
 
 interface MemeStats {
   likeCount?: number;
@@ -24,10 +44,11 @@ interface MemeStats {
   isTrending?: boolean;
 }
 
-interface MemeData {
+export interface MemeData {
   _id: string;
   title: string;
   contentUrl?: string;
+  creator?: string | { username: string; profilePic?: string };
   imageUrl?: string;
   author?: string | { username: string; profilePic?: string };
   createdAt?: string;
@@ -42,43 +63,58 @@ interface MemeData {
 
 interface MemeCardProps {
   meme: MemeData;
+  contentType: "MemeFeedPost" | "CreatedMeme" | "Comment";
 }
 
-const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
+const MemeCard: React.FC<MemeCardProps> = ({ meme, contentType }) => {
   const { user, setShowLoginModal } = useAuth();
+  const { downloadImage, isDownloading } = useDownload();
+  const router = useRouter(); 
+  
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [showFullImage, setShowFullImage] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
 
-  const title = meme.title;
-  const imageUrl = meme.contentUrl || meme.imageUrl || "";
+  // Determine Author Name safely
   const authorName =
     typeof meme.author === 'string'
       ? meme.author
-      : meme.author?.username || 'Anonymous';
+      : meme.author?.username || 
+    (typeof meme.creator === 'string' 
+      ? meme.creator 
+      : meme.creator?.username) || 'Anonymous';
+
+  // Determine Author Pic safely
   const authorPic =
-    typeof meme.author === 'object' ? meme.author?.profilePic : undefined;
+    (typeof meme.author === 'object' ? meme.author?.profilePic : undefined) ||
+    (typeof meme.creator === 'object' ? meme.creator?.profilePic : undefined);
+
+  const title = meme.title;
+  const imageUrl = meme.contentUrl || meme.imageUrl || "";
   const subreddit = meme.subreddit;
-  const initialIsLiked = meme.isLiked ?? meme.isLiked ?? false;
-  const initialIsSaved = meme.isSaved ?? meme.isSaved ?? false;
+  
+  const initialIsLiked = meme.stats?.isLiked ?? meme.isLiked ?? false;
+  const initialIsSaved = meme.stats?.isSaved ?? meme.isSaved ?? false;
+  
   let rawLikeCount = meme.stats?.likeCount ?? 0;
   if (initialIsLiked && rawLikeCount === 0) {
      rawLikeCount = 1;
   }
 
-  const initialLikeCount = rawLikeCount;
-  const viewCount = meme.stats?.viewCount ?? 0;
-  const isTrending = meme.stats?.isTrending ?? false;
-  const contentType = "MemeFeedPost";
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [isSaved, setIsSaved] = useState(initialIsSaved);
-  const [likeCount, setLikeCount] = useState(initialLikeCount);
+  const [likeCount, setLikeCount] = useState(rawLikeCount);
   const [commentCount, setCommentCount] = useState(meme.stats?.commentCount || 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [showLikeAnimation, setShowLikeAnimation] = useState(false);
+  
+  const viewCount = meme.stats?.viewCount ?? 0;
+  const isTrending = meme.stats?.isTrending ?? false;
 
   useEffect(() => {
     if (isHovered && meme.isVideo && videoRef.current) {
@@ -95,8 +131,44 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
       setShowLoginModal(true);
       return false;
     }
-  
-  return true;
+    return true;
+  };
+
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    let username: string | undefined;
+
+    // Check if creator exists (for CreatedMeme)
+    if (meme.creator) {
+      if (typeof meme.creator === 'object' && meme.creator?.username) {
+        username = meme.creator.username;
+      } else if (typeof meme.creator === 'string') {
+        username = meme.creator;
+      }
+    }
+    
+    // If no valid creator username found, default to 'troyy'
+    if (!username || username === 'Anonymous') {
+      username = 'troyy';
+    }
+
+    // Navigate to profile
+    router.push(`/u/${username}`);
+  };
+
+  // Check if current user is the creator
+  const isCreator = () => {
+    if (!user?.is_registered || contentType !== 'CreatedMeme') return false;
+    
+    if (typeof meme.creator === 'object' && meme.creator?.username) {
+      // Creator is an object with username
+      return meme.creator.username === user.username;
+    } else if (typeof meme.creator === 'string') {
+      return meme.creator === user._id || meme.creator === user.username;
+    }
+    return false;
   };
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -151,29 +223,11 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
     }
   };
 
-  const handleDownload = async () => {
-    try {
-      const res = await fetch(
-        `/api/download?url=${encodeURIComponent(imageUrl)}`
-      );
-
-      if (!res.ok) throw new Error("Download failed");
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `meme-${meme._id}.jpg`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      window.URL.revokeObjectURL(url);
-      toast.success("Download started");
-    } catch {
-      toast.error("Download failed");
-    }
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const filename = `mimi-${meme.title}.jpg`;
+    await downloadImage(meme.contentUrl || "", filename);
   };
 
   const handleShare = async (e: React.MouseEvent) => {
@@ -232,7 +286,7 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <Link href={`/feed/${meme._id}`} className="block group">
+        <Link href={`/feed/${meme._id}?type=${contentType}`} className="block group">
           <Card className="overflow-hidden bg-linear-to-br from-zinc-800 to-zinc-950 border-zinc-800 hover:border-zinc-400 transition-all duration-300 relative border-2 hover:shadow-xl hover:shadow-zinc-500/10">
             {/* Trending Badge */}
             {isTrending && (
@@ -255,7 +309,6 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                     className="w-full h-auto object-contain"
                     onLoadedData={() => setImageLoaded(true)}
                   />
-                  {/* Video Controls */}
                   <div className={`absolute bottom-4 right-4 flex gap-2 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
                     <Button
                       onClick={toggleMute}
@@ -274,7 +327,6 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                     onLoad={() => setImageLoaded(true)}
                     onDoubleClick={handleDoubleTapLike}
                   />
-                  {/* Skeleton Loader */}
                   {!imageLoaded && (
                     <div className="absolute inset-0 bg-linear-to-br from-zinc-800 to-zinc-900 animate-pulse" />
                   )}
@@ -319,6 +371,30 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                       align="end"
                       className="bg-zinc-900 border-zinc-800 text-zinc-100 w-56"
                     >
+                      {isCreator() && (
+                        <>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsEditDialogOpen(true);
+                            }}
+                            className="gap-3 cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 py-3 text-blue-400 hover:text-blue-300"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                            <span>Edit meme</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsDeleteDialogOpen(true);
+                            }}
+                            className="gap-3 cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 py-3 text-red-400 hover:text-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>Delete meme</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuItem
                         onClick={handleDownload}
                         className="gap-3 cursor-pointer hover:bg-zinc-800 focus:bg-zinc-800 py-3"
@@ -337,7 +413,6 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                   </DropdownMenu>
                 </div>
 
-                {/* View Count on hover */}
                 {viewCount > 0 && (
                   <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2">
                     <Eye className="h-4 w-4 text-zinc-300" />
@@ -349,14 +424,12 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
 
             {/* Content Section */}
             <div className="p-4">
-              {/* Title with gradient on hover */}
               {title && (
                 <h3 className="text-zinc-100 font-semibold text-base mb-3 line-clamp-2 group-hover:bg-linear-to-r group-hover:from-zinc-300 group-hover:to-zinc-300 group-hover:bg-clip-text group-hover:text-transparent transition-all duration-300">
                   {title}
                 </h3>
               )}
 
-              {/* Tags */}
               {meme.tags && meme.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-3">
                   {meme.tags.slice(0, 3).map((tag, index) => (
@@ -373,22 +446,35 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
               {/* Author & Metadata */}
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800">
-                  <Avatar className="h-9 w-9 ring-1 ring-zinc-500/50">
-                    <AvatarImage src={authorPic} alt={authorName} />
-                    <AvatarFallback className="bg-linear-to-br pt-1 from-zinc-500 to-zinc-600 text-white text-xs font-bold">
-                      {getInitials(authorName)}
-                    </AvatarFallback>
-                  </Avatar>
+                  
+                  {/* 4. Applied onClick to Parent Avatar Component */}
+                  <div 
+                    onClick={handleProfileClick} 
+                    className="cursor-pointer"
+                  >
+                    <Avatar className="h-9 w-9 ring-1 ring-zinc-500/50">
+                      <AvatarImage src={authorPic} alt={authorName} />
+                      <AvatarFallback className="bg-linear-to-br pt-1 from-zinc-500 to-zinc-600 text-white text-xs font-bold">
+                        {getInitials(authorName)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  
                   <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-zinc-200">{authorName}</span>
+                    <button 
+                      onClick={handleProfileClick}
+                      className="text-left hover:underline"
+                    >
+                      <span className="text-sm font-semibold text-zinc-200">{authorName}</span>
+                    </button>
                     <div className="flex items-center gap-2 text-xs text-zinc-500">
                       {subreddit && <span className="text-zinc-400 font-medium">r/{subreddit}</span>}
                       {meme.createdAt && <span>• {getTimeAgo(meme.createdAt)}</span>}
                     </div>
                   </div>
                 </div>
+
                 <div className="flex items-center justify-end pt-3 border-t border-zinc-800">
-                  {/* Like Button */}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -408,7 +494,6 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                     <span className="font-semibold">{formatNumber(likeCount)}</span>
                   </Button>
 
-                  {/* Comment Count */}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -418,7 +503,6 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                     <span className="font-semibold">{formatNumber(commentCount)}</span>
                   </Button>
 
-                  {/* Share Button */}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -429,14 +513,11 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
                   </Button>
                 </div>
               </div>
-
-              {/* Interaction Bar */}
             </div>
           </Card>
         </Link>
       </div>
 
-      {/* Full Image Modal */}
       {showFullImage && (
         <div
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
@@ -455,6 +536,28 @@ const MemeCard: React.FC<MemeCardProps> = ({ meme }) => {
           </Button>
         </div>
       )}
+
+      <EditMemeDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        memeId={meme._id}
+        initialTitle={title}
+        initialTags={meme.tags || []}
+        onSuccess={() => {
+          // Refresh or update the meme data
+          window.location.reload();
+        }}
+      />
+
+      <DeleteMemeDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        memeId={meme._id}
+        onSuccess={() => {
+          // Refresh parent component or navigate away
+          window.location.reload();
+        }}
+      />
     </>
   );
 };

@@ -3,7 +3,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { TextLayer, Layer } from '../types';
+import { TextLayer, Layer } from '../../types';
 
 interface BackgroundPanelProps {
   selectedLayer: TextLayer;

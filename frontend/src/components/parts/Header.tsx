@@ -7,13 +7,13 @@ import {
   ChevronDown,
   LayoutTemplate,
   Sparkles,
-  Hammer,
   Menu,
   X,
   LogIn,
   UserPlus,
-  Lock, // Added Lock icon
-  Star  // Icon for Features
+  Star,
+  Compass,
+  Search
 } from 'lucide-react';
 import Logo from '../ui/logo';
 import {
@@ -37,15 +37,25 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Navbar() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchUsername, setSearchUsername] = useState('');
   const { user, logout, showLoginModal, setShowLoginModal } = useAuth();
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;
+
+  const handleUserSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchUsername.trim()) {
+      router.push(`/u/${searchUsername.trim()}`);
+      setSearchUsername('');
+    }
+  };
 
   // Handler for locked items
   const handleLockedClick = (e: React.MouseEvent) => {
@@ -55,7 +65,7 @@ export function Navbar() {
 
   return (
     <header className="w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b sticky top-0 z-50">
-        <Container className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+        <Container className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14 sm:h-16 lg:h-18">
           {/* LEFT: Logo */}
           <div className="flex items-center">
               <Logo />
@@ -68,7 +78,7 @@ export function Navbar() {
               <>
                 <Button asChild variant={pathname.startsWith('/create') ? "secondary" : "ghost"} size="sm" className="gap-2">
                   <Link href="/create">
-                    <Sparkles className="h-4 w-4 text-violet-500" />
+                    <Sparkles className="h-4 w-4 text-white" />
                     Create
                   </Link>
                 </Button>
@@ -78,12 +88,33 @@ export function Navbar() {
                     Templates
                   </Link>
                 </Button>
-                <Button asChild variant={isActive('/feed/trending') ? "secondary" : "ghost"} size="sm" className="gap-2">
-                  <Link href="/feed/trending">
-                    <Star className="h-4 w-4" />
-                    Trending
+                <Button asChild variant={isActive('/explore') ? "secondary" : "ghost"} size="sm" className="gap-2">
+                  <Link href="/explore">
+                    <Compass className="h-4 w-4" />
+                    Explore
                   </Link>
                 </Button>
+
+                <form onSubmit={handleUserSearch} className="hidden lg:flex items-center gap-2 ml-4 pl-4 border-l border-zinc-700">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                    <Input
+                      placeholder="Search user..."
+                      value={searchUsername}
+                      onChange={(e) => setSearchUsername(e.target.value)}
+                      className="pl-8 h-9 bg-zinc-900 border-zinc-700 text-zinc-100 placeholder-zinc-500 text-sm w-40"
+                    />
+                  </div>
+                  <Button 
+                    type="submit"
+                    disabled={!searchUsername.trim()}
+                    size="sm"
+                    className="h-9 px-3"
+                  >
+                    Go
+                  </Button>
+                </form>
+
                 {/* Explore/Features REMOVED for logged in users as requested */}
               </>
             ) : (
@@ -91,7 +122,7 @@ export function Navbar() {
               <>
                 <Button asChild variant={pathname.startsWith('/create') ? "secondary" : "ghost"} size="sm" className="gap-2">
                   <Link href="/create">
-                    <Sparkles className="h-4 w-4 text-violet-500" />
+                    <Sparkles className="h-4 w-4 text-white" />
                     Create
                   </Link>
                 </Button>
@@ -103,7 +134,12 @@ export function Navbar() {
                   </Link>
                 </Button>
 
-                {/* Features (Replaces Explore) */}
+                <Button asChild variant={isActive('/explore') ? "secondary" : "ghost"} size="sm" className="gap-2">
+                  <Link href="/explore">
+                    <Compass className="h-4 w-4" />
+                    Explore
+                  </Link>
+                </Button>
                 <Button asChild variant="ghost" size="sm" className="gap-2">
                   <Link href="/features">
                     <Star className="h-4 w-4" />
@@ -184,7 +220,7 @@ export function Navbar() {
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-75 sm:w-100 bg-zinc-950 border-zinc-800 text-zinc-100">
+              <SheetContent side="right" className="w-64 sm:w-80 bg-zinc-950 border-zinc-800 text-zinc-100">
                 <SheetHeader>
                   <SheetTitle className="text-zinc-100">Menu</SheetTitle>
                   <SheetDescription className="text-zinc-400">
@@ -204,6 +240,12 @@ export function Navbar() {
                         <Link href="/templates" onClick={() => setMobileMenuOpen(false)}>
                           <LayoutTemplate className="h-5 w-5" />
                           Templates
+                        </Link>
+                      </Button>
+                      <Button asChild variant="ghost" className="justify-start gap-3">
+                        <Link href="/explore" onClick={() => setMobileMenuOpen(false)}>
+                          <Compass className="h-5 w-5" />
+                          Explore
                         </Link>
                       </Button>
                       <Button asChild variant="ghost" className="justify-start gap-3">
@@ -235,7 +277,7 @@ export function Navbar() {
                     <>
                       <Button asChild variant="ghost" className="justify-start gap-3">
                         <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
-                          <Sparkles className="h-5 w-5 text-violet-500" />
+                          <Sparkles className="h-5 w-5 text-white" />
                           Create
                         </Link>
                       </Button>

@@ -3,7 +3,7 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Type } from 'lucide-react';
-import { TextLayer, Layer } from '../types';
+import { TextLayer, Layer } from '../../types';
 
 interface TextContentPanelProps {
   selectedLayer: TextLayer;

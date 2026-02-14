@@ -15,8 +15,6 @@ import { toast } from 'sonner';
 import Masonry from 'react-masonry-css';
 
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Services
 import { 
@@ -173,7 +171,7 @@ export default function SingleTemplatePage() {
       
       {/* --- Header --- */}
       <div className="sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800 px-6 py-4">
-        <div className="max-w-[1920px] mx-auto flex items-center justify-between">
+        <div className="max-w-480 mx-auto flex items-center justify-between">
             <Button variant="ghost" size="icon" onClick={() => router.back()} className="hover:bg-zinc-800 rounded-full">
                 <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -182,7 +180,7 @@ export default function SingleTemplatePage() {
         </div>
       </div>
 
-      <div className="max-w-[1920px] mx-auto px-6 lg:px-12 mt-8">
+      <div className="max-w-480 mx-auto px-6 lg:px-12 mt-8">
         
         {/* --- Main Content Split --- */}
         {/* Changed Grid: 9 cols for Image, 3 cols for Sidebar (Wide Layout) */}
@@ -190,7 +188,7 @@ export default function SingleTemplatePage() {
             
             {/* Left: Image Display (Larger Area) */}
             <div className="lg:col-span-9">
-                <div className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-900/30 shadow-2xl flex items-center justify-center min-h-[500px] lg:min-h-[700px]">
+                <div className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-900/30 shadow-2xl flex items-center justify-center min-h-125 lg:min-h-175">
                     {/* Checkerboard pattern for transparent images */}
                     <div className="absolute inset-0 opacity-10" 
                          style={{ backgroundImage: 'radial-gradient(#444 1px, transparent 1px)', backgroundSize: '20px 20px' }} 

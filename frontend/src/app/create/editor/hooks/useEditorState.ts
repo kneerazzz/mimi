@@ -11,6 +11,8 @@ const initialLayers: Layer[] = [
       id: '1', 
       type: 'text' as const,
       text: 'TOP TEXT', 
+      width: 400,
+      height: 120,
       x: 50, 
       y: 10, 
       fontSize: 50, 
@@ -42,6 +44,8 @@ const initialLayers: Layer[] = [
       id: '2', 
       type: 'text' as const,
       text: 'BOTTOM TEXT', 
+      width: 400,
+      height: 120,
       x: 50, 
       y: 90, 
       fontSize: 50, 
@@ -92,6 +96,41 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
 
   const { saveHistory, undo, redo, history, historyIndex } = useHistory(initialLayers);
 
+  // Load saved state on mount (only if no templateId in URL)
+  useEffect(() => {
+    if (templateId) return; // Don't load saved state if editing a template
+    
+    try {
+      const savedData = localStorage.getItem('meme-editor-save');
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed.layers && Array.isArray(parsed.layers) && parsed.layers.length > 0) {
+          setLayers(parsed.layers);
+          if (parsed.filters) setFilters(parsed.filters);
+          if (parsed.customImage) {
+            setCustomImage(parsed.customImage);
+            // Load the image
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = parsed.customImage;
+            img.onload = () => {
+              setImageObj(img);
+              setImageLoaded(true);
+              if (parsed.template) {
+                setTemplate(parsed.template);
+              }
+            };
+          }
+          if (parsed.zoom) setZoom(parsed.zoom);
+          if (parsed.selectedId) setSelectedId(parsed.selectedId);
+          if (parsed.advancedMode !== undefined) setAdvancedMode(parsed.advancedMode);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load saved state:', error);
+    }
+  }, []); // Only run on mount
+
   useEffect(() => {
     const fetchTemplate = async () => {
       if (!templateId) return;
@@ -100,10 +139,20 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
         let data;
         if (type === 'user') {
           const res = await getUserTemplate(templateId as any);
+          // User template structure: directly has imageUrl and name
           data = res.data?.template || res.data;
+          // Normalize to have consistent structure (name instead of title)
+          if (data && !data.name && data.title) {
+            data.name = data.title;
+          }
         } else {
           const res = await getTemplateById(templateId as any);
+          // Public template structure: might have title property
           data = res.data?.template || res.data;
+          // Normalize to have consistent structure
+          if (data && !data.name && data.title) {
+            data.name = data.title;
+          }
         }
         setTemplate(data);
         const img = new Image();
@@ -127,6 +176,8 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
       text: 'New Text', 
       x: 50, 
       y: 50, 
+      width: 320,
+      height: 140,
       fontSize: 40, 
       fontFamily: 'Impact', 
       textAlign: 'center', 
@@ -216,9 +267,13 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
   };
 
   const updateLayer = (id: string, updates: Partial<Layer>) => {
-    setLayers(
-      layers.map((l) => (l.id === id ? ({ ...l, ...updates } as Layer) : l))
-    );
+    // Use functional update to ensure we're working with latest state
+    setLayers((currentLayers) => {
+      const newLayers = currentLayers.map((l) => (l.id === id ? ({ ...l, ...updates } as Layer) : l));
+      // Save to history so changes persist
+      saveHistory(newLayers);
+      return newLayers;
+    });
   };
 
   const deleteLayer = (id: string) => {
@@ -298,19 +353,120 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
     setIsDragging(false);
   };
 
+  const setSelectedLayerId = (id: string) => {
+    setSelectedId(id);
+  };
+
+  const toggleLayerVisibility = (id: string) => {
+    const newLayers = layers.map((l) =>
+      l.id === id ? ({ ...l, isVisible: !l.isVisible } as Layer) : l
+    );
+    setLayers(newLayers);
+    saveHistory(newLayers);
+  };
+
+  const toggleLayerLock = (id: string) => {
+    const newLayers = layers.map((l) =>
+      l.id === id ? ({ ...l, isLocked: !l.isLocked } as Layer) : l
+    );
+    setLayers(newLayers);
+    saveHistory(newLayers);
+  };
+
+  const moveLayer = (id: string, direction: 'up' | 'down') => {
+    const index = layers.findIndex((l) => l.id === id);
+    if (index === -1) return;
+
+    const targetIndex = direction === 'up' ? index + 1 : index - 1;
+    if (targetIndex < 0 || targetIndex >= layers.length) return;
+
+    const newLayers = [...layers];
+    const [removed] = newLayers.splice(index, 1);
+    newLayers.splice(targetIndex, 0, removed);
+
+    setLayers(newLayers);
+    saveHistory(newLayers);
+  };
+
+  const bringLayerForward = (id: string) => moveLayer(id, 'up');
+  const sendLayerBackward = (id: string) => moveLayer(id, 'down');
+
+  const duplicateLayer = (id: string) => {
+    const layer = layers.find((l) => l.id === id);
+    if (!layer) return;
+
+    const newId = Date.now().toString();
+    const offset = 3;
+
+    const clonedLayer: Layer =
+      layer.type === 'text'
+        ? ({
+            ...(layer as TextLayer),
+            id: newId,
+            x: layer.x + offset,
+            y: layer.y + offset,
+          } as TextLayer)
+        : ({
+            ...(layer as ImageLayer),
+            id: newId,
+            x: layer.x + offset,
+            y: layer.y + offset,
+          } as ImageLayer);
+
+    const newLayers = [...layers, clonedLayer];
+    setLayers(newLayers);
+    setSelectedId(newId);
+    saveHistory(newLayers);
+    toast.success('Layer duplicated');
+  };
+
   const selectedLayer = layers.find(l => l.id === selectedId);
+
+  const loadSavedState = (savedData: any) => {
+    try {
+      if (savedData.layers && Array.isArray(savedData.layers) && savedData.layers.length > 0) {
+        setLayers(savedData.layers);
+        if (savedData.filters) setFilters(savedData.filters);
+        if (savedData.customImage) {
+          setCustomImage(savedData.customImage);
+          // Load the image
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.src = savedData.customImage;
+          img.onload = () => {
+            setImageObj(img);
+            setImageLoaded(true);
+            if (savedData.template) {
+              setTemplate(savedData.template);
+            }
+          };
+        } else if (savedData.templateId) {
+          // If we have a templateId, fetch the template
+          // This will be handled by the existing useEffect
+        }
+        if (savedData.zoom !== undefined) setZoom(savedData.zoom);
+        if (savedData.selectedId) setSelectedId(savedData.selectedId);
+        if (savedData.advancedMode !== undefined) setAdvancedMode(savedData.advancedMode);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to load saved state:', error);
+      return false;
+    }
+  };
 
   return {
     loading,
     template,
     imageLoaded,
+    setSelectedId,
     imageObj,
     advancedMode,
     setAdvancedMode,
     layers,
     setLayers,
     selectedId,
-    setSelectedId,
     isDragging,
     zoom,
     setZoom,
@@ -328,10 +484,17 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
     handleDragMove,
     handleDragEnd,
     selectedLayer,
+    toggleLayerVisibility,
+    toggleLayerLock,
+    bringLayerForward,
+    sendLayerBackward,
+    duplicateLayer,
+    loadSavedState,
     undo: () => undo(setLayers),
     redo: () => redo(setLayers),
     historyIndex,
     history,
-    templateId
+    templateId,
+    type
   };
 };

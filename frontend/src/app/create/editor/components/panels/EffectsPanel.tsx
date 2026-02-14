@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Move, Image as ImageIcon } from 'lucide-react';
-import { TextLayer, Layer } from '../types';
+import { TextLayer, Layer } from '../../types';
 
 interface EffectsPanelProps {
   selectedLayer: TextLayer;
@@ -59,6 +59,9 @@ export const EffectsPanel: React.FC<EffectsPanelProps> = ({ selectedLayer, updat
 
           <div className="flex items-center justify-between"><span className="text-xs">Saturation</span> <span className="text-xs text-zinc-500">{filters.saturate}%</span></div>
           <Slider value={[filters.saturate]} min={0} max={200} onValueChange={(v) => setFilters({ ...filters, saturate: v[0] })} />
+
+          <div className="flex items-center justify-between"><span className="text-xs">Blur</span> <span className="text-xs text-zinc-500">{filters.blur}px</span></div>
+          <Slider value={[filters.blur]} min={0} max={20} step={0.5} onValueChange={(v) => setFilters({ ...filters, blur: v[0] })} />
         </div>
       </div>
     </div>

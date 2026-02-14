@@ -3,6 +3,8 @@ export interface TextLayer {
     id: string;
     type: 'text';
     text: string;
+    width: number;
+    height: number;
     x: number;
     y: number;
     // Typography

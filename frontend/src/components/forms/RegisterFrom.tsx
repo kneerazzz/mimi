@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Mail, Lock, User, UserPlus, Check, X } from 'lucide-react';
-import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -85,27 +84,27 @@ const SignupPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-zinc-950 flex items-center justify-center p-4">
+    <div className="min-h-screen w-full bg-zinc-950 flex items-center justify-center p-4 sm:p-6 lg:p-8">
       {/* Background gradient effects */}
       <div className="absolute inset-0 bg-linear-to-br from-zinc-900 via-zinc-950 to-black"></div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,var(--tw-gradient-stops))] from-zinc-800/20 via-transparent to-transparent"></div>
       
-      <Card className="w-full max-w-md relative z-10 bg-zinc-900/50 border-zinc-800 backdrop-blur-xl shadow-2xl">
-        <CardHeader className="space-y-1 pb-6">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-linear-to-br from-zinc-400 to-zinc-600 rounded-lg flex items-center justify-center">
-              <UserPlus className="w-6 h-6 text-zinc-950" />
+      <Card className="w-full max-w-lg sm:max-w-xl relative z-10 bg-zinc-900/50 border-zinc-800 backdrop-blur-xl shadow-2xl">
+        <CardHeader className="space-y-1 pb-4 sm:pb-6">
+          <div className="flex items-center justify-center mb-3 sm:mb-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-linear-to-br from-zinc-400 to-zinc-600 rounded-lg flex items-center justify-center">
+              <UserPlus className="w-5 h-5 sm:w-6 sm:h-6 text-zinc-950" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center text-zinc-100">
+          <CardTitle className="text-xl sm:text-2xl font-bold text-center text-zinc-100">
             Create an account
           </CardTitle>
-          <CardDescription className="text-center text-zinc-400">
+          <CardDescription className="text-xs sm:text-sm text-center text-zinc-400">
             Enter your information to get started
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 sm:space-y-4">
           {error && (
             <Alert className="bg-red-950/50 border-red-900 text-red-400">
               <AlertDescription>{error}</AlertDescription>
@@ -301,6 +300,7 @@ const SignupPage: React.FC = () => {
             <Button
               type="button"
               variant="outline"
+              onClick={() => router.push("/upcoming")}
               className="bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
               disabled={isLoading}
             >
@@ -326,6 +326,7 @@ const SignupPage: React.FC = () => {
             </Button>
             <Button
               type="button"
+              onClick={() => router.push("/upcoming")}
               variant="outline"
               className="bg-zinc-900/50 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100"
               disabled={isLoading}
@@ -340,6 +341,7 @@ const SignupPage: React.FC = () => {
           <p className="text-center text-sm text-zinc-500 pt-2">
             Already have an account?{' '}
             <button
+              onClick={() => router.push("/login")}
               type="button"
               className="text-zinc-300 hover:text-zinc-100 font-medium transition-colors"
             >

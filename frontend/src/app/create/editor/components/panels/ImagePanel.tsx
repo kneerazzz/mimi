@@ -2,21 +2,29 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Image as ImageIcon } from 'lucide-react';
-import { ImageLayer, Layer } from '../types';
+import { Button } from '@/components/ui/button';
+import { Image as ImageIcon, Crop } from 'lucide-react';
+import { ImageLayer, Layer } from '../../types';
 
 interface ImagePanelProps {
   selectedLayer: ImageLayer;
   updateLayer: (id: string, updates: Partial<Layer>) => void;
   advancedMode: boolean;
+  onCropClick: () => void;
 }
 
-export const ImagePanel: React.FC<ImagePanelProps> = ({ selectedLayer, updateLayer, advancedMode }) => {
+export const ImagePanel: React.FC<ImagePanelProps> = ({ selectedLayer, updateLayer, advancedMode, onCropClick }) => {
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2 text-sm text-zinc-400">
-        <ImageIcon className="w-4 h-4" />
-        <span>Image Layer</span>
+      <div className="flex items-center justify-between text-sm text-zinc-400">
+        <div className="flex items-center gap-2">
+            <ImageIcon className="w-4 h-4" />
+            <span>Image Layer</span>
+        </div>
+        <Button variant="outline" size="sm" onClick={onCropClick}>
+            <Crop className="w-3 h-3 mr-1.5" />
+            Crop
+        </Button>
       </div>
 
       <div className="space-y-4">

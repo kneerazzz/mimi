@@ -56,6 +56,10 @@ export const toggleTemplateSave = async ( templateId: templateId ) => {
     const response = await api.patch(`/savedTemplate/toggle-save-template/${templateId}`);
     return response.data;
 }
+export const getSavedTemplates = async ( ) => {
+    const response = await api.get(`/savedTemplate/get-saved-templates`);
+    return response.data;
+}
 
 export const searchTemplates = async (q: string, page: number = 1, limit: number = 40) => {
     const params = new URLSearchParams();
@@ -65,3 +69,20 @@ export const searchTemplates = async (q: string, page: number = 1, limit: number
     const response = await api.get(`/template/search-templates?${params.toString()}`);
     return response.data;
 };
+
+export const updateUserTemplate = async (templateId: templateId, name: any) => {
+    if(!templateId){
+        throw new Error("TemplateId is required");
+    }
+    const response = await api.patch(`/template/update-template/${templateId}`, name)
+    return response.data;
+}
+
+export const deleteUserTemplate = async (templateId: templateId) => {
+    if(!templateId){
+        throw new Error("TemplateId is required");
+    }
+    const response = await api.delete(`/template/delete-template/${templateId}`)
+    return response.data;
+}
+

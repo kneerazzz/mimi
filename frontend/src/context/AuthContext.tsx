@@ -1,6 +1,5 @@
 'use client'
 import React, { createContext, useContext, useState, useEffect} from "react";
-import api from "@/services/api";
 import { getCurrentUser, loginUser, logoutUser, registerUser } from "@/services/authService";
 import { toast } from "sonner";
 interface User {

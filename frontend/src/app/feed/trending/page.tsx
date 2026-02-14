@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { 
   Flame, 
   TrendingUp, 
   Calendar, 
   Award, 
   Hash, 
-  ArrowUpRight 
+  ArrowUpRight,
+  Clock
 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 
@@ -46,9 +48,10 @@ interface Meme {
 // --- Config ---
 const breakpointColumnsObj = {
   default: 4,
-  1600: 3,
-  1100: 2,
-  700: 1
+  1600: 4,
+  1100: 3,
+  700: 2,
+  500: 1,
 };
 
 // Fake trending topics for the header
@@ -57,14 +60,14 @@ const TRENDING_TOPICS = [
 ];
 
 export default function TrendingPage() {
-  const router = useRouter();
+  const pathname = usePathname();
   const [memes, setMemes] = useState<Meme[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [timeFilter, setTimeFilter] = useState('week'); // 'day', 'week', 'month'
 
-  // --- Infinite Scroll Observer ---
+  const isActive = (path: string) => pathname === path;
   const observer = useRef<IntersectionObserver | null>(null);
   const lastMemeRef = useCallback((node: HTMLDivElement) => {
     if (loading) return;
@@ -115,6 +118,44 @@ export default function TrendingPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       
+      {/* --- Feed Navigation --- */}
+      <div className="sticky top-0 z-30 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/50 py-3 px-6">
+        <div className="max-w-480 mx-auto px-6 flex gap-2">
+          <Button 
+            asChild
+            variant={isActive('/feed') ? 'default' : 'ghost'}
+            size="sm"
+            className={isActive('/feed') ? '' : 'text-zinc-400 hover:text-zinc-200'}
+          >
+            <Link href="/feed">
+              Home
+            </Link>
+          </Button>
+          <Button 
+            asChild
+            variant={isActive('/feed/trending') ? 'default' : 'ghost'}
+            size="sm"
+            className={isActive('/feed/trending') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
+          >
+            <Link href="/feed/trending">
+              <Flame className="h-4 w-4" />
+              Trending
+            </Link>
+          </Button>
+          <Button 
+            asChild
+            variant={isActive('/feed/new') ? 'default' : 'ghost'}
+            size="sm"
+            className={isActive('/feed/new') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
+          >
+            <Link href="/feed/new">
+              <Clock className="h-4 w-4" />
+              Latest
+            </Link>
+          </Button>
+        </div>
+      </div>
+
       {/* --- 1. Hero / Header Section --- */}
       <div className="relative border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-xl z-20 top-0">
         <div className="max-w-480 mx-auto px-6 py-6">
@@ -201,7 +242,7 @@ export default function TrendingPage() {
                            Maybe add a subtle glow border or ring 
                         */}
                         <div className={`${index === 0 ? 'ring-2 ring-orange-500/20 rounded-xl' : ''}`}>
-                             <MemeCard meme={meme as any} />
+                             <MemeCard meme={meme as any} contentType='MemeFeedPost' />
                         </div>
                     </div>
                 );

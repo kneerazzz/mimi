@@ -5,15 +5,15 @@ import Logo from "../ui/logo";
 const Footer = () => {
     return (
         <footer className="w-full bg-black/80 backdrop-blur-md border-t border-white/10 text-white/80">
-            <Container className="mx-auto max-w-300 px-4 md:px-8 py-12 grid grid-cols-1 md:grid-cols-6 gap-8">
+            <Container className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8">
 
-                <div className="flex items-start">
+                <div className="flex items-start col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-1">
                 <Logo />
                 </div>
 
-                <div className="flex flex-col gap-6">
-                    <h2 className="text-sm font-semibold">Features</h2>
-                    <div className="flex flex-col gap-2 text-sm">
+                <div className="flex flex-col gap-3 sm:gap-6">
+                    <h2 className="text-xs sm:text-sm font-semibold text-white">Features</h2>
+                    <div className="flex flex-col gap-2 text-xs sm:text-sm">
                         <a href="/create" className="text-gray-700 hover:text-gray-50">Create Mimi</a>
                         <a href="/create-ai" className="text-gray-700 hover:text-gray-50">Create AI Mimi</a>
                         <a href="/feed" className="text-gray-700 hover:text-gray-50">Feed</a>
@@ -24,9 +24,9 @@ const Footer = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-6">
-                    <h2 className="text-sm font-semibold">Product</h2>
-                    <div className="flex flex-col gap-2 text-sm">
+                <div className="flex flex-col gap-3 sm:gap-6">
+                    <h2 className="text-xs sm:text-sm font-semibold text-white">Product</h2>
+                    <div className="flex flex-col gap-2 text-xs sm:text-sm">
                         <a href="/pricing" className="text-gray-700 hover:text-gray-50">Pricing</a>
                         <a href="/method" className="text-gray-700 hover:text-gray-50">Method</a>
                         <a href="/integration" className="text-gray-700 hover:text-gray-50">Integrations</a>
@@ -37,9 +37,9 @@ const Footer = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-6">
-                    <h2 className="text-sm font-semibold">Company</h2>
-                    <div className="flex flex-col gap-2 text-sm">
+                <div className="flex flex-col gap-3 sm:gap-6">
+                    <h2 className="text-xs sm:text-sm font-semibold text-white">Company</h2>
+                    <div className="flex flex-col gap-2 text-xs sm:text-sm">
                         <a href="/about" className="text-gray-700 hover:text-gray-50">About</a>
                         <a href="/customers" className="text-gray-700 hover:text-gray-50">Customers</a>
                         <a href="/careers" className="text-gray-700 hover:text-gray-50">Careers</a>
@@ -51,9 +51,9 @@ const Footer = () => {
                 </div>
 
 
-                <div className="flex flex-col gap-6">
-                    <h2 className="text-sm font-semibold">Resources</h2>
-                    <div className="flex flex-col gap-2 text-sm">
+                <div className="flex flex-col gap-3 sm:gap-6">
+                    <h2 className="text-xs sm:text-sm font-semibold text-white">Resources</h2>
+                    <div className="flex flex-col gap-2 text-xs sm:text-sm">
                         <a href="/developers" className="text-gray-700 hover:text-gray-50">Developer</a>
                         <a href="/status" className="text-gray-700 hover:text-gray-50">Status</a>
                         <a href="/startups" className="text-gray-700 hover:text-gray-50">Startups</a>
@@ -64,9 +64,9 @@ const Footer = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-6">
-                    <h2 className="text-sm font-semibold">Connect</h2>
-                    <div className="flex flex-col gap-2 text-sm">
+                <div className="flex flex-col gap-3 sm:gap-6">
+                    <h2 className="text-xs sm:text-sm font-semibold text-white">Connect</h2>
+                    <div className="flex flex-col gap-2 text-xs sm:text-sm">
                         <a href="https://kneerazzz.vercel.app" className="text-gray-700 hover:text-gray-50">Contact us</a>
                         <a href="https://instagram.com/kneerazzz" className="text-gray-700 hover:text-gray-50">Community</a>
                         <a href="https://x.com/kneerazzz" className="text-gray-700 hover:text-gray-50">X (Twitter)</a>
@@ -80,7 +80,7 @@ const Footer = () => {
             </Container>
 
             {/* BOTTOM: Copyright */}
-            <div className="text-center text-xs text-white/40 pb-6">
+            <div className="text-center text-xs sm:text-sm text-white/40 pb-4 sm:pb-6">
                 © {new Date().getFullYear()} SkillSprint. All rights reserved.
             </div>
         </footer>

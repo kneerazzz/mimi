@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Mail, Lock, LogIn, User } from 'lucide-react';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -66,9 +65,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   // 4. Removed the outer "min-h-screen" and background divs 
   // so this Card fits perfectly inside your Modal.
   return (
-      <Card className="w-full max-w-md relative z-10 bg-zinc-900/50 border-zinc-800 backdrop-blur-xl shadow-2xl">
+      <Card className="w-full max-w-lg sm:max-w-xl relative z-10 bg-zinc-900/50 border-zinc-800 backdrop-blur-xl shadow-2xl">
         <form onSubmit={handleSubmit}>
-            <CardHeader className="space-y-1 pb-6">
+            <CardHeader className="space-y-1 pb-4 sm:pb-6">
             <div className="flex items-center justify-center mb-1">
                 <div className="w-12 h-12 bg-linear-to-br from-zinc-400 to-zinc-600 rounded-full flex items-center justify-center">
                 {/* Ensure /assets/login.png exists, or use a fallback Icon */}
@@ -83,7 +82,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
             </CardDescription>
             </CardHeader>
             
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
                 {error && (
                 <Alert className="bg-red-950/50 border-red-900 text-red-400">
                     <AlertDescription>{error}</AlertDescription>

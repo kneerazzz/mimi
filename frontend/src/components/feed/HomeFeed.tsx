@@ -1,9 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import MemeCard from '../memes/MemeCard';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { AlertCircle, Search, Flame, Clock } from 'lucide-react';
 import { getHomeMemes } from '@/services/memeService';
 import Masonry from 'react-masonry-css';
 
@@ -55,14 +58,30 @@ const MasonrySkeleton = () => (
 /* ---------------- Home Feed ---------------- */
 
 const HomeFeed = () => {
+  const router = useRouter();
+  const pathname = usePathname();
   const [memes, setMemes] = useState<Meme[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const observer = useRef<IntersectionObserver | null>(null);
+
+  const isActive = (path: string) => pathname === path;
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      const encodedQuery = encodeURIComponent(searchQuery.trim());
+      router.push(`/feed/search/memes?q=${encodedQuery}`);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
 
   const lastMemeRef = useCallback(
     (node: HTMLDivElement) => {
@@ -137,8 +156,80 @@ const HomeFeed = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      {/* Search and Feed Options Header */}
+      <div className="sticky top-0 z-20 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/50 py-3 sm:py-4 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-10xl mx-auto">
+          {/* Feed Options */}
+          <div className="flex gap-1 sm:gap-2 mb-3 sm:mb-4 flex-wrap">
+            <Button 
+              asChild
+              variant={isActive('/feed') ? 'default' : 'ghost'}
+              size="sm"
+              className={`text-xs sm:text-sm h-8 sm:h-10 ${isActive('/feed') ? '' : 'text-zinc-400 hover:text-zinc-200'}`}
+            >
+              <Link href="/feed">
+                Home
+              </Link>
+            </Button>
+            <Button 
+              asChild
+              variant={isActive('/feed/trending') ? 'default' : 'ghost'}
+              size="sm"
+              className={`gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-10 ${isActive('/feed/trending') ? '' : 'text-zinc-400 hover:text-zinc-200'}`}
+            >
+              <Link href="/feed/trending">
+                <Flame className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Trending</span>
+              </Link>
+            </Button>
+            <Button 
+              asChild
+              variant={isActive('/feed/new') ? 'default' : 'ghost'}
+              size="sm"
+              className={`gap-1 sm:gap-2 text-xs sm:text-sm h-8 sm:h-10 ${isActive('/feed/new') ? '' : 'text-zinc-400 hover:text-zinc-200'}`}
+            >
+              <Link href="/feed/new">
+                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Latest</span>
+              </Link>
+            </Button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative flex-1 group flex gap-2 flex-col sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-zinc-500 group-focus-within:text-purple-400 transition-colors" />
+              <Input 
+                placeholder="Search memes..." 
+                className="pl-10 sm:pl-12 h-9 sm:h-12 bg-zinc-900/80 border-zinc-800 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 rounded-xl text-xs sm:text-base transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
+            </div>
+            <Button 
+              onClick={handleSearch}
+              disabled={!searchQuery.trim()}
+              className="px-4 sm:px-6 h-9 sm:h-12 rounded-xl text-xs sm:text-base w-full sm:w-auto"
+            >
+              Search
+            </Button>
+            {searchQuery && (
+              <Button 
+                onClick={handleClearSearch}
+                variant="ghost"
+                className="px-3 sm:px-4 h-9 sm:h-12 text-xs sm:text-sm text-zinc-400 hover:text-zinc-200 w-full sm:w-auto"
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Feed */}
-      <main className="max-w-600 mx-auto px-10 py-8">
+      <main className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
         <Masonry
           breakpointCols={breakpointColumnsObj}
           className="my-masonry-grid"
@@ -153,7 +244,7 @@ const HomeFeed = () => {
                 className="break-inside-avoid mb-6"
               >
                 <div className="rounded-xl bg-zinc-900 shadow-md hover:shadow-xl transition-shadow">
-                  <MemeCard meme={meme} />
+                  <MemeCard meme={meme} contentType='MemeFeedPost' />
                 </div>
               </div>
             );

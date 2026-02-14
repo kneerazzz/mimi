@@ -1,10 +1,9 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { Dialog, DialogContent, DialogContentBlurry, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import LoginForm from "@/components/forms/LoginForm";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function LoginModal() {
   const { showLoginModal, setShowLoginModal } = useAuth();

@@ -65,6 +65,34 @@ export const TypographyPanel: React.FC<TypographyPanelProps> = ({ selectedLayer,
           <div className="flex justify-between text-xs text-zinc-400"><Label>Line Height</Label> <span>{selectedLayer.lineHeight.toFixed(1)}</span></div>
           <Slider value={[selectedLayer.lineHeight]} min={0.5} max={3} step={0.1} onValueChange={(v) => updateLayer(selectedLayer.id, { lineHeight: v[0] })} />
         </div>
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-zinc-400">
+              <Label>Box Width</Label>
+              <span>{selectedLayer.width}px</span>
+            </div>
+            <Slider
+              value={[selectedLayer.width]}
+              min={80}
+              max={800}
+              step={5}
+              onValueChange={(v) => updateLayer(selectedLayer.id, { width: v[0] })}
+            />
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-zinc-400">
+              <Label>Box Height</Label>
+              <span>{selectedLayer.height}px</span>
+            </div>
+            <Slider
+              value={[selectedLayer.height]}
+              min={40}
+              max={400}
+              step={5}
+              onValueChange={(v) => updateLayer(selectedLayer.id, { height: v[0] })}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
