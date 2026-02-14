@@ -8,7 +8,6 @@ import { Like } from "../models/like.model.js"
 import { SavedMeme } from "../models/savedMeme.model.js";
 import { Comment } from "../models/comment.model.js"; 
 
-
 const MAX_MEMES = 10000;
 /**
  * Helper function to determine if a user has interacted with a temporary post, 
@@ -119,32 +118,34 @@ const getInteractionStatus = async(feed, userId, contentType = "MemeFeedPost") =
     })
 }
 
-const cacheMemeFeed = async() => {
-    try {
-        const freshMemes = await fetchMemeFeedFromReddit(150);
-        
-        if(freshMemes.length === 0){
-            console.warn("Meme Feed Cache: Fetched zero valid memes.");
-            return; 
-        }
+const cacheMemeFeed = async () => {
+  try {
+    const freshMemes = await fetchMemeFeedFromReddit(150);
 
-        const bulkOperations = freshMemes.map(meme => ({
-            updateOne: { 
-                filter: { redditPostId: meme.redditPostId },
-                update: {
-                    $set: { ...meme}
-                },
-                upsert: true
-            }
-        }))
-        
-        const result = await MemeFeedPost.bulkWrite(bulkOperations)
-        console.log(`Cache Update Success: Inserted ${result.upsertedCount}, Matched/Updated: ${result.matchedCount}`);
-
-    } catch (error) {
-        console.error("CRITICAL MongoDB Error during bulk caching:", error);
+    if (!freshMemes.length) {
+      console.warn("Meme Feed Cache: Fetched zero valid memes.");
+      return;
     }
-}
+
+    const bulkOperations = freshMemes.map(meme => ({
+      updateOne: {
+        filter: { redditPostId: meme.redditPostId },
+        update: { $set: { ...meme } },
+        upsert: true
+      }
+    }));
+
+    const result = await MemeFeedPost.bulkWrite(bulkOperations);
+
+    console.log(
+      `Cache Update Success: Inserted ${result.upsertedCount}, Matched/Updated: ${result.matchedCount}`
+    );
+
+  } catch (error) {
+    console.error("CRITICAL MongoDB Error during bulk caching:", error);
+  }
+};
+
 
 const ensureMemeFeedNotEmpty = async() => {
     const count = await MemeFeedPost.countDocuments();
@@ -237,6 +238,31 @@ const getTrendingMemes = asyncHandler(async(req, res) => {
     )
 });
 
+const getNewestMemes = asyncHandler(async(req, res) => {
+    const { page = 1, limit = 50 } = req.query;
+    const skip = (parseInt(page)-1) * parseInt(limit);
+    const parsedLimit = parseInt(limit);
+
+    let feed = await MemeFeedPost.find({})
+        .sort({ createdAt: -1 }) 
+        .skip(skip)
+        .limit(parsedLimit);
+
+    const currentUser = req.user;
+    if(currentUser && currentUser.is_registered){
+        feed = await getInteractionStatus(feed, currentUser._id, "MemeFeedPost")
+    } else {
+        feed = feed.map(post => ({
+            ...post.toObject(),
+            isLiked: false,
+            isSaved: false
+        }))
+    }
+    
+    return res.status(200).json(
+        new ApiResponse(200, { feed }, "Newest memes fetched successfully")
+    )
+});
 
 const getMemeDetails = asyncHandler(async(req, res) => {
     const currentUser = req.user;
@@ -267,8 +293,11 @@ const getMemeDetails = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Invalid content type for details")
     }
 
-
-    content = await contentModel.findById(contentId);
+    if(contentType === "MemeFeedPost"){
+        content = await contentModel.findById(contentId)
+    } else {
+        content = await contentModel.findById(contentId).populate("creator", "username profilePic name");
+    }
     if(!content){
         throw new ApiError(404, "Meme not found! Check the ID or content type.")
     }
@@ -358,10 +387,52 @@ const getMemeDetails = asyncHandler(async(req, res) => {
     )
 })
 
+const searchMemes = asyncHandler(async (req, res) => {
+  const { q, page = 1, limit = 20 } = req.query;
+
+  if (!q) {
+    throw new ApiError(400, "Search query 'q' is required");
+  }
+
+  const parsedLimit = Math.max(parseInt(limit) || 20, 1);
+  const parsedPage = Math.max(parseInt(page) || 1, 1);
+  const skip = (parsedPage - 1) * parsedLimit;
+
+  const query = {
+    $text: { $search: q }
+  };
+
+  const totalMemes = await MemeFeedPost.countDocuments(query);
+
+  const memes = await MemeFeedPost.find(
+      query,
+      { score: { $meta: "textScore" } }
+    )
+    .sort({ score: { $meta: "textScore" } })
+    .skip(skip)
+    .limit(parsedLimit)
+    .select("-__v")
+    .lean();
+
+  return res.status(200).json(
+    new ApiResponse(200, {
+      feed: memes,
+      pagination: {
+        totalMemes,
+        totalPages: Math.ceil(totalMemes / parsedLimit),
+        currentPage: parsedPage,
+        limit: parsedLimit
+      }
+    }, "Memes searched successfully")
+  );
+});
+
 export {
     cacheMemeFeed,
     getHomeFeed,
     getMemeDetails,
     ensureMemeFeedNotEmpty,
-    getTrendingMemes
+    getTrendingMemes,
+    getNewestMemes,
+    searchMemes
 }

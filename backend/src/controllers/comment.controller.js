@@ -27,7 +27,7 @@ const getOrCreatePermanentMeme = async(contentId) => {
         finalImageUrl: temporaryMeme.contentUrl,
         isAIGenerated: false,
         template: null,
-        creator: "692fe332caca25fcecc0f909" // Make sure this is intended
+        creator: "69689043899b4365dc6015d9" // Make sure this is intended
     })
     return {
         finalContentId: permanentMeme._id,

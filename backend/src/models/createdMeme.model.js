@@ -6,6 +6,10 @@ const createdMemeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
     },
+    title: {
+        type: String,
+        default: "Untitled Meme"
+    },
     template: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Template"

@@ -4,7 +4,7 @@ import { CreatedMeme } from "../models/createdMeme.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { SavedMeme } from "../models/savedMeme.model.js";
 import { ApiResponse } from "../utils/apiResponse.js";
-
+import { Like } from "../models/like.model.js";
 const getOrCreatePermanentMeme = async(contentId) => {
     const temporaryMeme = await MemeFeedPost.findById(contentId);
     if(!temporaryMeme){
@@ -27,7 +27,7 @@ const getOrCreatePermanentMeme = async(contentId) => {
         finalImageUrl: temporaryMeme.contentUrl,
         isAIGenerated: false,
         template: null,
-        creator: "692fe332caca25fcecc0f909"
+        creator: "69689043899b4365dc6015d9"
     })
     return {
         finalContentId: permanentMeme._id,
@@ -97,12 +97,32 @@ const getAllSavedMemes = asyncHandler(async(req, res) => {
     const permanentMemeIds = memes.map(meme => meme.contentId);
     const savedMemes = await CreatedMeme.find({_id: { $in: permanentMemeIds }})
         .populate({path: "creator", select: "username profilePic"})
+        .sort({ createdAt: -1 })
+    
+    // Get all liked memes for this user to check which are liked
+    const likedMemeDocs = await Like.find({
+        user: user._id,
+        contentId: { $in: permanentMemeIds },
+        contentType: "CreatedMeme"
+    }).select("contentId")
+    
+    const likedMemeIds = new Set(likedMemeDocs.map(doc => doc.contentId.toString()));
+
+    // Add isLiked and isSaved to each meme
+    const memesWithStatus = savedMemes.map(meme => {
+        const memeObj = meme.toObject ? meme.toObject() : meme;
+        return {
+            ...memeObj,
+            isLiked: likedMemeIds.has(meme._id.toString()),
+            isSaved: true // All memes in this list are saved by definition
+        };
+    });
     
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200, savedMemes, "Successfully fetched the saved Memes!")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, memesWithStatus, "Successfully fetched the saved Memes!")
+        )
 })
 
 export {

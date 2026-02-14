@@ -29,8 +29,27 @@ const memeFeedPostSchema = new mongoose.Schema({
     lastCachedAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    uploadedToCloudinary: {
+        type: Boolean,
+        default: false
+    },
 }, {timestamps: true})
+
+memeFeedPostSchema.index(
+  {
+    title: "text",
+    subreddit: "text",
+    author: "text"
+  },
+  {
+    weights: {
+      title: 5,
+      subreddit: 2,
+      author: 1
+    }
+  }
+);
 
 
 

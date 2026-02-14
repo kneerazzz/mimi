@@ -44,6 +44,12 @@ const userSchema = new mongoose.Schema({
     is_registered: {
         type: Boolean,
         default: false
+    },
+    forgotPasswordToken: {
+        type: String,
+    },
+    forgotPasswordExpiry: {
+        type: Date,
     }
 }, {timestamps: true})
 

@@ -56,7 +56,6 @@ export const geminiClient = async (prompt, options = {}) => {
             requestPayload.generationConfig = generationConfig;
         }
 
-        console.log("Sending request to Gemini. Schema used:", !!options.responseSchema);
 
         const response = await axios.post(
             `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
@@ -76,7 +75,6 @@ export const geminiClient = async (prompt, options = {}) => {
             throw new ApiError(500, "No valid response from Gemini");
         }
 
-        console.log("Gemini response received. Length:", text.length);
 
 
         captionCache.set(cacheKey, text);

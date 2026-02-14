@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { getAllLikedMemes, toggleLike } from "../controllers/like.controller.js";
-import { verifyJwt } from "../middlewares/auth.middleware.js";
 
 const router = Router()
 

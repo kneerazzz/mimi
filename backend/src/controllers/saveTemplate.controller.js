@@ -47,6 +47,7 @@ const getAllSavedTemplates = asyncHandler(async(req, res) => {
         user: user._id
     }).populate("template", "templateId imageUrl name")
         .populate("user", "username name profilePic")
+        .sort({createdAt: -1})
         
     if(templates.length === 0){
         return res
@@ -55,11 +56,21 @@ const getAllSavedTemplates = asyncHandler(async(req, res) => {
             new ApiResponse(404, [], "No saved templates found!")
         )
     }
+    
+    // Add isSaved field to each template (all are saved by definition)
+    const templatesWithStatus = templates.map(template => {
+        const templateObj = template.toObject ? template.toObject() : template;
+        return {
+            ...templateObj,
+            isSaved: true // All templates in this list are saved by definition
+        };
+    });
+    
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200, { templates }, "Templates fetched successfully!")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, { templates: templatesWithStatus }, "Templates fetched successfully!")
+        )
 })
 
 

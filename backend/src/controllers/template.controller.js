@@ -5,10 +5,11 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import uploadOnCloudinary from "../utils/fileUpload.js";
 import { Template } from "../models/template.model.js";
 import { SavedTemplate } from "../models/savedTemplate.model.js";
+import deleteFromCloudinary from "../utils/fileDelete.js";
 
 const uploadTemplate = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user){
+    if(!user || !user.is_registered){
         throw new ApiError(404, "Error getting user");
     }
     const imageUrlLocalPath = req.file?.path;
@@ -23,7 +24,7 @@ const uploadTemplate = asyncHandler(async(req, res) => {
     const template = await UserTemplate.create({
         submittedBy: user,
         imageUrl: imageUrl.url,
-        name: user.username || name,
+        name: name || "Untitled Template",
         status: "approved"
     })
     if(!template){
@@ -37,13 +38,17 @@ const uploadTemplate = asyncHandler(async(req, res) => {
 })
 
 const getSingleUserTemplate = asyncHandler(async(req, res) => {
+    const user = req.user;
+    if(!user || !user.is_registered){
+        throw new ApiError(404, "Error getting user");
+    }
     const { templateId } = req.params;
     if(!templateId){
         throw new ApiError(400, "Template id required")
     }
     const template = await UserTemplate.findOne({
         templateId,
-        submittedBy: req.user._id
+        submittedBy: user._id
     })
     if(!template){
         throw new ApiError(404, "Template not found!")
@@ -57,12 +62,12 @@ const getSingleUserTemplate = asyncHandler(async(req, res) => {
 
 const getAllUserTemplates = asyncHandler(async(req, res) => {
     const user = req.user;
-    if(!user){
+    if(!user || !user.is_registered){
         throw new ApiError(404, "User not found!")
     }
     const templates = await UserTemplate.find({
         submittedBy: user._id
-    })
+    }).sort({createdAt: -1})
     if(!templates){
         throw new ApiError(500, "Error getting user templates")
     }
@@ -175,12 +180,19 @@ const searchTemplates = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Search query 'q' is required");
     }
 
-    const parsedLimit = parseInt(limit);
-    const parsedPage = parseInt(page);
+    const parsedLimit = Math.max(parseInt(limit) || 40, 1);
+    const parsedPage = Math.max(parseInt(page) || 1, 1);
     const skip = (parsedPage - 1) * parsedLimit;
 
+    const searchRegex = new RegExp(q, "i"); // case-insensitive
+
     const query = {
-        $text: { $search: q }
+        $or: [
+            { name: searchRegex },
+            { category: searchRegex },
+            { subCategory: searchRegex },
+            { emotionTags: searchRegex }
+        ]
     };
 
     const totalTemplates = await Template.countDocuments(query);
@@ -190,22 +202,83 @@ const searchTemplates = asyncHandler(async (req, res) => {
         .skip(skip)
         .limit(parsedLimit)
         .select('-__v -updatedAt')
-        .exec();
+        .sort({ createdAt: -1 }) // optional but smart
+        .lean();
 
     if (templates.length === 0) {
-        return res.status(404).json(new ApiResponse(404, [], "No templates found for your search."));
+        return res.status(200).json(
+            new ApiResponse(200, [], "No templates found for your search.")
+        );
     }
 
-    return res.status(200).json(new ApiResponse(200, {
-        templates,
-        pagination: {
-            totalTemplates,
-            totalPages,
-            currentPage: parsedPage,
-            limit: parsedLimit
-        }
-    }, "Templates searched successfully"));
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                templates,
+                pagination: {
+                    totalTemplates,
+                    totalPages,
+                    currentPage: parsedPage,
+                    limit: parsedLimit
+                }
+            },
+            "Templates searched successfully"
+        )
+    );
 });
+
+const updateUserTemplate = asyncHandler(async(req, res) => {
+    const user = req.user;
+    if(!user || !user.is_registered){
+        throw new ApiError(404, "Error getting user");
+    }
+    const { templateId } = req.params;
+    const { name } = req.body;
+    if(!templateId){
+        throw new ApiError(400, "Template id required")
+    }
+    const template = await UserTemplate.findOneAndUpdate({
+        templateId,
+        submittedBy: user._id
+    }, {
+        $set: { name }
+    }, {new: true})
+    if(!template){
+        throw new ApiError(404, "Template not found!")
+    }
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, { template: template.toObject() }, "User Template updated successfully")
+    )
+})
+
+const deleteUserTemplate = asyncHandler(async(req, res) => {
+    const user = req.user;
+    if(!user || !user.is_registered){
+        throw new ApiError(404, "Error getting user");
+    }
+    const { templateId } = req.params;
+    if(!templateId){
+        throw new ApiError(400, "Template id required")
+    }
+    const template = await UserTemplate.findOne({
+        templateId,
+        submittedBy: user._id
+    })
+    if(!template){
+        throw new ApiError(404, "Template not found")
+    }
+    await deleteFromCloudinary(template.imageUrl);
+    await template.deleteOne();
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {}, "User Template deleted successfully")
+    )
+})
 
 export {
     uploadTemplate,
@@ -214,5 +287,7 @@ export {
     getSingleTemplate,
     getTemplatesByCategory,
     getRandomTemplates,
-    searchTemplates
+    searchTemplates,
+    updateUserTemplate,
+    deleteUserTemplate
 }

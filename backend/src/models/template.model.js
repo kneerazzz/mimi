@@ -48,7 +48,7 @@ const templateSchema = new mongoose.Schema({
 
 }, {timestamps: true})
 
-templateSchema.index({ name: 'text', category: 'text', subCategory: 'text' });
+templateSchema.index({ name: 'text', category: 'text', subCategory: 'text', emotionTags: 'text' });
 
 
 export const Template = mongoose.model("Template", templateSchema)
