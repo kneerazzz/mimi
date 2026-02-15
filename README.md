@@ -1,56 +1,89 @@
-# **💡 MimiBoard: Contextual AI Meme Generator**
+# Mimi
 
-## **🌟 Overview**
+**Mimi** is a comprehensive meme creation and sharing platform designed for the modern internet. It combines a high-performance infinite feed with a professional-grade browser-based image editor, allowing users to discover viral content and create their own memes using advanced layering tools.
 
-**MimiBoard** is a next-generation platform blending meme discovery with AI-powered creation. Users input real-life scenarios, and our system uses the **Gemini API** to analyze the emotional context, find the perfect template, and instantly generate a highly relatable meme.
+## Key Features
 
-The architecture is built for **persistence and performance**, solving the challenge of managing permanent user interactions on a volatile, transient content feed.
+### 🎨 Advanced Meme Studio
+Unlike basic caption tools, the Mimi Editor is a full-featured canvas design tool.
+* **Layer-Based Editing:** Add multiple text and image layers.
+* **Drag & Drop:** Freely move, resize, and rotate elements on the canvas.
+* **Rich Text Styling:** Control font family, size, color, stroke (outline), background bubbles, and shadows.
+* **Smart Scaling:** Canvas resolution handling ensures exports look crisp regardless of screen size.
+* **Template System:** Start from a blank canvas or use community templates.
 
-### **Core Value Proposition**
+### 🌊 Infinite Discovery Feed
+* **Masonry Layout:** Pinterest-style grid optimized for visual content consumption.
+* **Smart Caching:** Fast loading times with optimized image delivery.
+* **Categories:** Filter by Trending, Latest, or Search specific keywords.
+* **Interactive UI:** Like, save, and share functionality.
+* **Cold Start Handling:** Custom loading states to handle server wake-up times gracefully.
 
-* **Contextual AI Matching:** Generate a meme based on your mood, not just random tags.  
-* **Seamless Persistence:** User activity (Likes, Saves, Comments) is permanently retained, even when the source content expires from the cache.  
-* **Progressive Editing:** Simple editing mode for speed, with an optional Advanced Editor for granular control.
+### 👤 User Features
+* **Profile Dashboard:** Manage created memes and saved collections.
+* **Template Management:** Users can upload and privatize their own templates.
+* **Secure Authentication:** JWT-based persistent login sessions.
 
-## **🛠️ Technology Stack (Full-Stack MERN \+ AI)**
+---
 
-| Layer | Technology | Key Components |
-| :---- | :---- | :---- |
-| **Backend (API)** | Node.js (Express) | Asynchronous Controllers, Express Router, Cron Jobs |
-| **Database** | MongoDB (Mongoose) | TTL Indices, Polymorphic Schemas (8 Models), Advanced Aggregation |
-| **Frontend** | Next.js (React) | High-performance, SSR-capable User Interface |
-| **AI/Tools** | **Google Gemini API** | Scenario analysis, Tag & Caption generation |
-| **Data Source** | Reddit Public API | Content caching for the Discovery Feed |
+## Technology Stack
 
-## **🚀 Architectural Highlights**
+### Frontend (Client)
+* **Framework:** Next.js 15 (App Router)
+* **Language:** TypeScript
+* **Styling:** Tailwind CSS
+* **State Management:** React Hooks & Context API
+* **Canvas Logic:** Native HTML5 Canvas API (Custom Hooks)
+* **Icons:** Lucide React
+* **Deployment:** Vercel
 
-MimiBoard's complexity lies in its dual content system and persistence management:
+### Backend (Server)
+* **Runtime:** Node.js
+* **Framework:** Express.js
+* **Database:** MongoDB (Mongoose ORM)
+* **Storage:** Cloudinary (Image hosting & optimization)
+* **Architecture:** MVC Pattern with RESTful API endpoints
+* **Deployment:** Render
 
-### **1\. Dual Content Architecture**
+---
 
-* **Transient Content (MemeFeedPost):** Content cached from Reddit that automatically **expires every 24 hours** via a TTL index.  
-* **Permanent Content (CreatedMeme):** The single, long-term destination for all user-generated content and cloned permanent memes.
+## Environment Variables
 
-### **2\. Seamless User Persistence (Clone-on-Interaction)**
+To run this project locally, you will need to configure the following environment variables.
 
-To prevent liked/saved content from disappearing when the cache expires, MimiBoard uses a robust persistence mechanism:
+### Frontend (.env.local)
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
 
-| User Action | System Logic | Result |
-| :---- | :---- | :---- |
-| **Anonymous Visit** | A permanent User document is created with a UUID and linked to the session cookie. | User activity is tracked even without registration. |
-| **Like/Save MemeFeedPost** | The controller runs the **Clone-or-Find-and-Swap** helper. | The temporary post is cloned into a new **CreatedMeme** document (owned by a System ID), and the Like record is immediately switched to point to the **permanent CreatedMeme ID**. |
-| **TTL Expiry** | The temporary MemeFeedPost is deleted. | The user's Like record is intact, pointing to the permanent clone. **History is preserved.** |
 
-### **3\. AI Creation Pipeline (The Core Feature)**
 
-1. User inputs a scenario (e.g., "When I try to use a new Mongoose hook...").  
-2. The backend calls the Gemini API to get structured JSON output: {"tags": \["confusion", "struggle"\], "caption": "Me watching the docs."}.  
-3. The system queries the **MemeTemplate** collection, matching the emotionTags against the template's manual tags.  
-4. The best match is returned to the user for editing.
+.env.local
 
-## **⚙️ Quick Start (Backend)**
+    PORT=5000
+    MONGODB_URI=your_mongodb_connection_string
+    JWT_SECRET=your_jwt_secret_key
+    CLOUDINARY_CLOUD_NAME=your_cloud_name
+    CLOUDINARY_API_KEY=your_api_key
+    CLOUDINARY_API_SECRET=your_api_secret
+    CLIENT_URL=http://localhost:3000
+    EMAIL_USER="YOUR_EMAIL_ADDRESSS"
+    EMAIL_PASS="YOUR_EMAIL_PASS"
 
-1. Clone the repository and navigate to the server/ directory.  
-2. Install dependencies: npm install  
-3. Create a .env file with MONGODB\_URI, Auth Secrets, and GEMINI\_API\_KEY.  
-4. Run the server: npm start (This will automatically start the caching job).
+
+
+BACKEND SETUP 
+    cd backend
+    npm install 
+    npm run dev
+
+
+FRONTEND SETUP
+    cd frontend
+    npm install
+    npm run dev
+
+
+FRONTEND BUILD COMMANDS
+    cd frontend
+    npm run build
+    npm start
