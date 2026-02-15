@@ -57,12 +57,6 @@ export function Navbar() {
     }
   };
 
-  // Handler for locked items
-  const handleLockedClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setShowLoginModal(true);
-  };
-
   return (
     <header className="w-full bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b sticky top-0 z-50">
         <Container className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14 sm:h-16 lg:h-18">

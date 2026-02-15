@@ -11,15 +11,13 @@ import { getHomeMemes } from '@/services/memeService';
 import Masonry from 'react-masonry-css';
 
 /* ---------------- Masonry Breakpoints ---------------- */
-
 const breakpointColumnsObj = {
-  default: 4,
-  1536: 4,
-  1280: 3,
-  1024: 3,
-  768: 2,
-  640: 1,
-  0: 1,
+  default: 5,        // 1920px and up (Ultra wide)
+  1536: 4,           // 2xl: 1536px (Large Desktop)
+  1280: 3,           // xl: 1280px (Standard Desktop)
+  1024: 3,           // lg: 1024px (Small Desktop/Laptop)
+  768: 2,            // md: 768px (Tablets)
+  640: 1             // sm: 640px (Mobile - force 1 column for better UX)
 };
 
 /* ---------------- Types ---------------- */
@@ -238,7 +236,7 @@ const HomeFeed = () => {
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
       {/* Search and Feed Options Header */}
       <div className="sticky top-0 z-20 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/50 py-3 sm:py-4 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-10xl mx-auto">
+        <div className="max-w-480 mx-auto px-4 sm:px-6 lg:px-8">
           {/* Feed Options */}
           <div className="flex gap-1 sm:gap-2 mb-3 sm:mb-4 flex-wrap">
             <Button 
@@ -308,7 +306,7 @@ const HomeFeed = () => {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="max-w-480 mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         
         {/* --- COLD START LOADER --- 
             Only shows when fetching initially (isLoading is true) and we have no memes yet. 
