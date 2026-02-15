@@ -13,12 +13,12 @@ import Masonry from 'react-masonry-css';
 /* ---------------- Masonry Breakpoints ---------------- */
 
 const breakpointColumnsObj = {
-  default: 6,
-  1536: 5,
-  1280: 4,
+  default: 4,
+  1536: 4,
+  1280: 3,
   1024: 3,
-  768: 3,
-  640: 2,
+  768: 2,
+  640: 1,
   0: 1,
 };
 

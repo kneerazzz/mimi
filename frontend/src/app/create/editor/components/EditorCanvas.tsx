@@ -1,4 +1,3 @@
-
 import React, { RefObject } from 'react';
 import { Layer, hexToRgba, formatText } from '../types';
 
@@ -34,23 +33,21 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   handleDragStart,
 }) => {
   return (
-    <div className="flex-1 bg-[#09090b] flex flex-col relative">
+    <div className="flex-1 bg-[#09090b] flex flex-col relative min-h-0">
       <div className="absolute inset-0 opacity-20 pointer-events-none"
         style={{ backgroundImage: 'radial-gradient(#333 1px, transparent 1px)', backgroundSize: '20px 20px' }}
       />
 
-      <div className="flex-1 flex items-center justify-center p-8 overflow-hidden relative">
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden relative">
         <canvas ref={canvasRef} className="hidden" />
 
         {imageLoaded && template && (
           <div
             ref={containerRef}
-            className="relative shadow-2xl shadow-black/50 select-none ring-1 ring-zinc-800"
+            className="relative shadow-2xl shadow-black/50 select-none ring-1 ring-zinc-800 max-h-[50vh] md:max-h-[85vh] max-w-full md:max-w-[85vw]"
             style={{
               transform: `scale(${zoom / 100})`,
               aspectRatio: `${imageObj?.naturalWidth}/${imageObj?.naturalHeight}`,
-              maxHeight: '85vh',
-              maxWidth: '85vw',
               filter: advancedMode ? `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturate}%) blur(${filters.blur}px)` : 'none',
               transition: isDragging ? 'none' : 'transform 0.2s ease-out'
             }}
@@ -58,7 +55,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
             <img src={customImage || template.imageUrl} alt="" className="w-full h-full object-contain pointer-events-none" />
 
             {layers.filter(l => l.isVisible).map((layer) => {
-              if (layer.type === 'image') {
+              // ... (Keep existing layer rendering logic exactly as is)
+               if (layer.type === 'image') {
                 return (
                   <div
                     key={layer.id}
@@ -87,7 +85,6 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                       style={{
                         width: '100%',
                         height: '100%',
-                        // stretch to match the resized box so memes can be intentionally distorted
                         objectFit: 'fill',
                         pointerEvents: 'none'
                       }}
@@ -134,7 +131,6 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     width: hasExplicitWidth ? `${text.width}px` : 'max-content',
                     maxWidth: '100%',
                     ...(hasExplicitHeight ? { maxHeight: `${text.height}px` } : {}),
-                    // allow purple box resize to crop text content
                     overflow: 'hidden',
                     zIndex: selectedId === text.id ? 50 : 10
                   }}

@@ -232,7 +232,7 @@ export function Navbar() {
                     <>
                       <Button asChild variant="ghost" className="justify-start gap-3">
                         <Link href="/create" onClick={() => setMobileMenuOpen(false)}>
-                          <Sparkles className="h-5 w-5 text-violet-500" />
+                          <Sparkles className="h-5 w-5 text-white" />
                           Create
                         </Link>
                       </Button>

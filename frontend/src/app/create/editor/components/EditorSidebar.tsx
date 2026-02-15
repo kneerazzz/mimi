@@ -71,13 +71,13 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
   onDuplicateLayer,
 }) => {
   return (
-    <div className="w-80 border-l border-zinc-800 bg-zinc-950/90 backdrop-blur-lg flex flex-col z-20 shadow-2xl shadow-black/50">
-      <div className="p-4 border-b border-zinc-800 space-y-3">
+    <div className="w-full md:w-80 h-[45vh] md:h-full border-t md:border-t-0 md:border-l border-zinc-800 bg-zinc-950/90 backdrop-blur-lg flex flex-col z-20 shadow-2xl shadow-black/50">
+      <div className="p-3 md:p-4 border-b border-zinc-800 space-y-3 shrink-0">
         <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
           <span>Layers</span>
           <span className="text-zinc-600">{layers.length}</span>
         </div>
-        <div className="space-y-1 max-h-40 overflow-y-auto pr-1">
+        <div className="space-y-1 max-h-24 md:max-h-40 overflow-y-auto pr-1">
           {layers.map((layer, index) => {
             const isActive = layer.id === selectedId;
             const label =
@@ -183,7 +183,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
         <div className="grid grid-cols-2 gap-2 pt-1">
           <Button
             onClick={addText}
-            className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-semibold shadow-md shadow-black/30"
+            className="bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-semibold shadow-md shadow-black/30 h-8"
           >
             <Plus className="w-4 h-4 mr-2" /> Add Text
           </Button>
@@ -191,7 +191,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
             variant="destructive"
             onClick={() => selectedLayer && deleteLayer(selectedLayer.id)}
             disabled={!selectedLayer}
-            className="opacity-90 hover:opacity-100 bg-red-900/50 border border-red-500/30 hover:bg-red-800/50"
+            className="opacity-90 hover:opacity-100 bg-red-900/50 border border-red-500/30 hover:bg-red-800/50 h-8"
           >
             <Trash2 className="w-4 h-4 mr-2" /> Delete
           </Button>
@@ -200,7 +200,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
 
       <ScrollArea className="flex-1 min-h-0">
         {selectedLayer ? (
-          <div className="p-5 space-y-6 pb-28">
+          <div className="p-4 md:p-5 space-y-6 pb-20">
             {selectedLayer.type === 'image' && (
               <ImagePanel
                 selectedLayer={selectedLayer}
@@ -219,6 +219,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                     <div className="space-y-2">
                       <Label>Quick Styles</Label>
                       <div className="flex flex-wrap gap-2">
+                        {/* ... Quick style buttons (kept as is) ... */}
                         <Button
                           variant="outline"
                           size="sm"
@@ -353,9 +354,10 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
 
                 {advancedMode && (
                   <div className="space-y-4">
-                    <div className="space-y-2">
+                     <div className="space-y-2">
                       <Label>Quick Styles</Label>
                       <div className="flex flex-wrap gap-2">
+                        {/* ... (Same quick styles) ... */}
                         <Button
                           variant="outline"
                           size="sm"
@@ -440,7 +442,6 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                         </Button>
                       </div>
                     </div>
-
                     <Tabs defaultValue="typography" className="w-full">
                       <TabsList className="w-full bg-zinc-900 border border-zinc-800 grid grid-cols-4">
                         <TabsTrigger value="typography"><Type className="w-4 h-4" /></TabsTrigger>

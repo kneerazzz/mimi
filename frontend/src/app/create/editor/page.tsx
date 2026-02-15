@@ -315,7 +315,6 @@ function EditorContent() {
     }
     return customImage || template?.imageUrl;
   }
-
   return (
     <div className="h-screen bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden">
       <EditorNavbar
@@ -332,7 +331,6 @@ function EditorContent() {
             toast.error('Please login to publish');
             return;
           }
-          // Generate canvas before opening dialog
           generateCanvas();
           setIsPublishDialogOpen(true);
         }}
@@ -356,7 +354,7 @@ function EditorContent() {
       />
 
       <div
-        className="flex-1 flex overflow-hidden relative"
+        className="flex-1 flex flex-col md:flex-row overflow-hidden relative"
         onMouseMove={(e) => {
           handleDragMove(e);
         }}
@@ -373,21 +371,32 @@ function EditorContent() {
           handleDragEnd();
         }}
       >
-        <EditorCanvas
-          containerRef={containerRef}
-          canvasRef={canvasRef}
-          imageLoaded={imageLoaded}
-          template={template}
-          customImage={customImage}
-          zoom={zoom}
-          isDragging={isDragging}
-          advancedMode={advancedMode}
-          filters={filters}
-          imageObj={imageObj}
-          layers={layers}
-          selectedId={selectedId}
-          handleDragStart={handleDragStart}
-        />
+        <div className="flex-1 relative flex flex-col min-h-0">
+          <EditorCanvas
+            containerRef={containerRef}
+            canvasRef={canvasRef}
+            imageLoaded={imageLoaded}
+            template={template}
+            customImage={customImage}
+            zoom={zoom}
+            isDragging={isDragging}
+            advancedMode={advancedMode}
+            filters={filters}
+            imageObj={imageObj}
+            layers={layers}
+            selectedId={selectedId}
+            handleDragStart={handleDragStart}
+          />
+          
+          <BottomToolbar
+            undo={undo}
+            redo={redo}
+            historyIndex={historyIndex}
+            historyLength={history.length}
+            zoom={zoom}
+            setZoom={setZoom}
+          />
+        </div>
 
         <EditorSidebar
           layers={layers}
@@ -406,15 +415,6 @@ function EditorContent() {
           onBringForward={bringLayerForward}
           onSendBackward={sendLayerBackward}
           onDuplicateLayer={duplicateLayer}
-        />
-
-        <BottomToolbar
-          undo={undo}
-          redo={redo}
-          historyIndex={historyIndex}
-          historyLength={history.length}
-          zoom={zoom}
-          setZoom={setZoom}
         />
       </div>
     </div>
