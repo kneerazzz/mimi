@@ -28,6 +28,7 @@ export default function PasswordSettingsPage() {
       toast.error('User email not found. Please try reloading.');
       return;
     }
+    console.log('Sending OTP to:', user.email); // Debug log
 
     try {
       setSendingEmail(true);

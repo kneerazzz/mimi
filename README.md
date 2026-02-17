@@ -1,12 +1,12 @@
-# Mimi 🐱
+# Mimi
 
 **Mimi** is a comprehensive meme creation and sharing platform designed for the modern internet. It combines a high-performance infinite feed with a professional-grade browser-based image editor, allowing users to discover viral content and create their own memes using advanced layering tools.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🎨 Advanced Meme Studio
+### Advanced Meme Studio
 
 Unlike basic caption tools, the Mimi Editor is a full-featured canvas design tool.
 
