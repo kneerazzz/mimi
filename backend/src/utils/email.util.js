@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 export const sendEmail  = async({to, subject, text, html}) => {
     try {
         const info = await transporter.sendMail({
-            from: `"MIMI" <${process.env.EMAIL_USER}>`,
+            from: `"MIMI" <${EMAIL_USER}>`,
             to,
             subject,
             text,
@@ -19,6 +19,7 @@ export const sendEmail  = async({to, subject, text, html}) => {
         })
         
     } catch (error) {
+        console.log("Error sending email:", error);
         throw error  
     }
 }
