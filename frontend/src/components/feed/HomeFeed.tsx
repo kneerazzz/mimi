@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { AlertCircle, Search, Flame, Clock, Loader2, Coffee, Server } from 'lucide-react';
 import { getHomeMemes } from '@/services/memeService';
 import Masonry from 'react-masonry-css';
-
+import ColdStartLoader from '../ui/coldstart';
 /* ---------------- Masonry Breakpoints ---------------- */
 const breakpointColumnsObj = {
   default: 5,  // 1920px and up (Ultra wide)
@@ -67,70 +67,6 @@ const HomeFeed = () => {
     setSearchQuery('');
   };
 
-  const ColdStartLoader = () => {
-    const [messageIndex, setMessageIndex] = useState(0);
-    const [progress, setProgress] = useState(0);
-    const funnyMessages = [
-      "Waking up the server hamsters... 🐹",
-      "Injecting coffee into the database... ☕",
-      "Convincing the free tier to work... 💸",
-      "Downloading more RAM... 💾",
-      "Polishing the pixels... ✨",
-      "Asking the server nicely... 🥺",
-      "Still loading (broke dev problems)... 😭",
-    ];
-
-    useEffect(() => {
-      const messageInterval = setInterval(() => {
-        setMessageIndex((prev) => (prev + 1) % funnyMessages.length);
-      }, 3000);
-      const progressInterval = setInterval(() => {
-        setProgress((oldProgress) => {
-          if (oldProgress >= 90) return oldProgress;
-          const diff = Math.random() * 10;
-          return Math.min(oldProgress + diff, 90);
-        });
-      }, 800);
-      return () => {
-        clearInterval(messageInterval);
-        clearInterval(progressInterval);
-      };
-    }, []);
-
-    return (
-      <div className="flex flex-col items-center justify-center py-16 px-4 gap-4 text-center">
-        <div className="relative">
-          <Server className="w-12 h-12 text-zinc-400 animate-bounce" />
-          <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-[9px] font-bold px-1 rounded">
-            Free Tier
-          </span>
-        </div>
-        <p className="text-zinc-300 font-medium text-sm sm:text-base">{funnyMessages[messageIndex]}</p>
-        <div className="w-full max-w-xs sm:max-w-sm bg-zinc-800 rounded-full h-2 overflow-hidden">
-          <div
-            className="h-full bg-linear-to-r from-blue-500 to-purple-500 transition-all duration-700 ease-out rounded-full"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <p className="text-zinc-500 text-xs">
-          Init_Sequence_Start {Math.round(progress)}%
-        </p>
-        <p className="text-zinc-400 text-xs sm:text-sm max-w-xs">
-          Real talk: My backend is hosted on Render&apos;s free tier, so it spins down when inactive.
-          The first load takes about 30–50 seconds to warm up.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2 w-full max-w-xs sm:max-w-sm">
-          <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm">
-            Read features while waiting
-          </Button>
-          <Button disabled size="sm" className="flex-1 text-xs sm:text-sm">
-            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-            Server booting up...
-          </Button>
-        </div>
-      </div>
-    );
-  };
 
   const lastMemeRef = useCallback(
     (node: HTMLDivElement) => {
