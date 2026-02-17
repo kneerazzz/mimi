@@ -8,7 +8,7 @@ connectDB()
 .then(() => {
 
     app.get("/", (req, res) => {
-        res.send("<h1>mimi server is running wohohohho</h1> <h2>visit <a href='https://mimi-create.vercel.com'>MIMI</a> To Check the running site</h2>")
+        res.send("<h1>mimi server is running wohohohho</h1> <h2>visit <a href='https://mimi-create.vercel.app'>MIMI</a> To Check the running site</h2>")
     });
 
     app.listen(PORT, () => {
