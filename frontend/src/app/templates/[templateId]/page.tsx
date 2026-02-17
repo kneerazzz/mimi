@@ -37,7 +37,7 @@ interface Template {
 }
 
 const masonryBreakpoints = {
-  default: 5, // Increased for wider screens
+  default: 5,
   1600: 4,
   1280: 3,
   1024: 3,

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import Masonry from 'react-masonry-css';
 
 const breakpointColumnsObj = {
-  default: 4,
+  default: 5,
   1536: 4,
   1280: 3,
   1024: 3,

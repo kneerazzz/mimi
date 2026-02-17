@@ -10,20 +10,17 @@
 
 .my-masonry-grid {
   display: flex;
-  margin-left: -24px; /* Gutter size offset */
+  margin-left: -6px; /* Gutter size offset */
   width: auto;
 }
 
 .my-masonry-grid_column {
-  padding-left: 24px; /* Gutter size */
+  padding-left: 6px; /* Gutter size */
   background-clip: padding-box;
 }
 
 /* Optional: Adjust gutter for mobile if you want tighter spacing */
 @media (max-width: 640px) {
-  .my-masonry-grid {
-    margin-left: -16px;
-  }
   .my-masonry-grid_column {
     padding-left: 16px;
   }
