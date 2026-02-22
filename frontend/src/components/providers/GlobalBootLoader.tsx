@@ -1,10 +1,13 @@
 'use client';
+
 import api from "@/services/api";
 import { useEffect, useState } from "react";
 import ColdStartLoader from "../ui/coldstart";
+import { usePathname } from "next/navigation"; // 1. Import usePathname
 
 export const GlobalBootLoader = () => {
   const [isBooting, setIsBooting] = useState(true);
+  const pathname = usePathname(); // 2. Hook to get the current URL
 
   useEffect(() => {
     let isMounted = true;
@@ -14,18 +17,13 @@ export const GlobalBootLoader = () => {
       try {
         const response = await api.get("/health");
         
-        // Ensure both the HTTP status is 200 AND the DB is fully connected
-        // Note: response.data.data matches your ApiResponse nested structure
         if (response.status === 200 && response.data?.data?.database === "Connected") {
           if (isMounted) setIsBooting(false);
-          return; // Exit the polling loop
+          return; 
         } else {
-          // If status is 200 but DB is somehow not connected, retry
           if (isMounted) timeoutId = setTimeout(checkServerStatus, 2000);
         }
       } catch (err: any) {
-        // If the server is asleep (network error) OR returns 503/500,
-        // Axios/fetch will likely throw an error here. We catch it and retry.
         console.warn("Server booting or DB connecting, retrying...", err?.message || err);
         if (isMounted) timeoutId = setTimeout(checkServerStatus, 2000);
       }
@@ -33,17 +31,18 @@ export const GlobalBootLoader = () => {
 
     checkServerStatus();
 
-    // Cleanup function to prevent memory leaks if component unmounts
     return () => {
       isMounted = false;
       clearTimeout(timeoutId);
     };
   }, []);
 
-  // Once booted, render nothing so the rest of the app shows
-  if (!isBooting) return null;
+  // 3. Define the routes that should bypass the loading screen
+  const unblockedRoutes = ['/features', '/upcoming'];
 
-  // Render the loader overlay while booting
+  // 4. Hide the loader if the server is awake OR if the user is on an unblocked route
+  if (!isBooting || unblockedRoutes.includes(pathname)) return null;
+
   return (
     <div className="fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center">
       <ColdStartLoader />
