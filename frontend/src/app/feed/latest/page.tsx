@@ -135,7 +135,7 @@ export default function LatestMemesPage() {
     <div className="w-full min-h-screen px-2 sm:px-4 md:px-6 lg:px-8 bg-zinc-950 text-zinc-100 ">
       
       {/* --- Feed Navigation --- */}
-      <div className="flex items-center gap-1 sm:gap-2 mb-2 overflow-x-auto scrollbar-none">
+      <div className="flex mt-3 items-center gap-1 sm:gap-2 mb-2 overflow-x-auto scrollbar-none">
         <Link href="/feed">
           <Button
             variant={isActive('/feed') || isActive('/') ? 'default' : 'ghost'}
