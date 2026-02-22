@@ -5,7 +5,7 @@ import Link from 'next/link';
 import MemeCard from '../memes/MemeCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Search, Flame, Clock, Loader2, Coffee, Server } from 'lucide-react';
+import { AlertCircle, Search, Flame, Clock} from 'lucide-react';
 import { getHomeMemes } from '@/services/memeService';
 import Masonry from 'react-masonry-css';
 /* ---------------- Masonry Breakpoints ---------------- */
@@ -153,7 +153,7 @@ const HomeFeed = () => {
         </div>
 
         {/* Search bar — full width on mobile */}
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex items-center gap-2 w-full mt-3">
           <div className="relative flex-1">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
             <Input

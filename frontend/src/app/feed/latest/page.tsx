@@ -6,13 +6,14 @@ import Link from 'next/link';
 import { 
   Sparkles, 
   Clock,
-  RefreshCw,
+  Search,
   Flame
 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
 
 import MemeCard from '@/components/memes/MemeCard';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { getLatestMemes } from '@/services/memeService';
 
 // --- Types (Ensure these match your MemeCard expectations) ---
@@ -55,6 +56,7 @@ const breakpointColumnsObj = {
 export default function LatestMemesPage() {
   const router = useRouter();
   const pathname = usePathname();
+  const [searchQuery, setSearchQuery] = useState('');
   const [memes, setMemes] = useState<Meme[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -118,106 +120,85 @@ export default function LatestMemesPage() {
     if (page > 1) fetchMemes(page);
   }, [page]);
 
-  // Manual refresh handler
-  const handleRefresh = () => {
-    fetchMemes(1, true);
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      const encodedQuery = encodeURIComponent(searchQuery.trim());
+      router.push(`/feed/search/memes?q=${encodedQuery}`);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="w-full min-h-screen px-2 sm:px-4 md:px-6 lg:px-8 bg-zinc-950 text-zinc-100 ">
       
       {/* --- Feed Navigation --- */}
-      <div className="sticky top-0 z-30 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/50 py-3 px-6">
-        <div className="max-w-480 mx-auto px-6 flex gap-2">
-          <Button 
-            asChild
-            variant={isActive('/feed') ? 'default' : 'ghost'}
+      <div className="flex items-center gap-1 sm:gap-2 mb-2 overflow-x-auto scrollbar-none">
+        <Link href="/feed">
+          <Button
+            variant={isActive('/feed') || isActive('/') ? 'default' : 'ghost'}
             size="sm"
-            className={isActive('/feed') ? '' : 'text-zinc-400 hover:text-zinc-200'}
+            className="shrink-0 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
           >
-            <Link href="/feed">
-              <Flame className="h-4 w-4" />
-              Home
-            </Link>
+            <Flame className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Home
           </Button>
-          <Button 
-            asChild
+        </Link>
+        <Link href="/feed/trending">
+          <Button
             variant={isActive('/feed/trending') ? 'default' : 'ghost'}
             size="sm"
-            className={isActive('/feed/trending') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
+            className="shrink-0 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
           >
-            <Link href="/feed/trending">
-              <Flame className="h-4 w-4" />
-              Trending
-            </Link>
+            <Flame className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Trending
           </Button>
-          <Button 
-            asChild
+        </Link>
+        <Link href="/feed/latest">
+          <Button
             variant={isActive('/feed/latest') ? 'default' : 'ghost'}
             size="sm"
-            className={isActive('/feed/latest') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
+            className="shrink-0 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
           >
-            <Link href="/feed/latest">
-              <Clock className="h-4 w-4" />
-              Latest
-            </Link>
+            <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+            Latest
           </Button>
-        </div>
+        </Link>
       </div>
-
       {/* --- Header Section --- */}
-      <div className="top-16 border-b border-zinc-900 bg-zinc-950/95 backdrop-blur-xl z-20">
-        <div className="max-w-480 mx-auto px-6 py-6">
-            
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex flex-col gap-1">
-                  <h1
-                    className="
-                      flex items-center gap-2
-                      font-black italic tracking-tighter
-                      text-2xl sm:text-3xl md:text-4xl
-                    "
-                  >
-                    <Sparkles
-                      className="
-                        text-zinc-500 fill-zinc-500/20
-                        w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10
-                      "
-                    />
-                    <span className="bg-linear-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">
-                      LATEST MEMES
-                    </span>
-                  </h1>
-
-                  <p
-                    className="
-                      flex items-center gap-1.5
-                      text-zinc-500 font-medium
-                      text-sm sm:text-base
-                      ml-0.5 sm:ml-1
-                    "
-                  >
-                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    Fresh off the internet
-                  </p>
-                </div>
-                {/* Refresh Button */}
-                <button
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    className="flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
-                >
-                    <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-                    <span className="font-semibold text-sm">
-                        {refreshing ? 'Refreshing...' : 'Refresh'}
-                    </span>
-                </button>
-            </div>
+        <div className="flex items-center gap-2 w-full mt-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <Input
+              placeholder="Search memes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="pl-8 h-8 sm:h-9 text-sm w-full"
+            />
+          </div>
+          <Button
+            onClick={handleSearch}
+            size="sm"
+            className="shrink-0 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+          >
+            Search
+          </Button>
+          {searchQuery && (
+            <Button
+              onClick={handleClearSearch}
+              variant="ghost"
+              size="sm"
+              className="shrink-0 h-8 sm:h-9 text-xs sm:text-sm px-2"
+            >
+              Clear
+            </Button>
+          )}
         </div>
-      </div>
-
       {/* --- Main Content --- */}
-      <div className="max-w-480 mx-auto px-6 py-8">
+      <div className="mt-3">
         
         {/* Empty State */}
         {!loading && memes.length === 0 && (
@@ -236,8 +217,8 @@ export default function LatestMemesPage() {
         {memes.length > 0 && (
             <Masonry
                 breakpointCols={breakpointColumnsObj}
-                className="my-masonry-grid"
-                columnClassName="my-masonry-grid_column"
+                className="my-masonry-grid flex w-auto -ml-2 sm:-ml-3"
+                columnClassName="pl-2 sm:pl-3 bg-clip-padding"
             >
                 {memes.map((meme, index) => {
                     // Prepare meme data with proper image URL priority
@@ -251,7 +232,7 @@ export default function LatestMemesPage() {
                         <div 
                             key={`${meme._id}-${index}`} 
                             ref={index === memes.length - 1 ? lastMemeRef : undefined}
-                            className="break-inside-avoid mb-6"
+                            className="mb-2 sm:mb-3"
                         >
                             <MemeCard 
                                 meme={memeData as any} 
@@ -277,16 +258,9 @@ export default function LatestMemesPage() {
                 <div className="max-w-md mx-auto">
                     <h3 className="text-xl font-bold text-zinc-800 mb-2">You&apos;ve reached the bottom!</h3>
                     <p className="text-zinc-600 mb-4">No more memes to load right now</p>
-                    <button
-                        onClick={handleRefresh}
-                        className="px-6 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition-all font-semibold text-sm"
-                    >
-                        Refresh for more
-                    </button>
                 </div>
             </div>
         )}
-
       </div>
     </div>
   );

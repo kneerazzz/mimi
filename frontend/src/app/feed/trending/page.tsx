@@ -1,22 +1,18 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Flame, 
-  TrendingUp, 
-  Calendar, 
-  Award, 
-  Hash, 
-  ArrowUpRight,
+  Search,
   Clock
 } from 'lucide-react';
 import Masonry from 'react-masonry-css';
+import { Input } from '@/components/ui/input';
 
 import MemeCard from '@/components/memes/MemeCard';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { getTrendingMemes } from '@/services/memeService';
 
 // --- Types (Ensure these match your MemeCard expectations) ---
@@ -60,11 +56,13 @@ const TRENDING_TOPICS = [
 ];
 
 export default function TrendingPage() {
+  const router = useRouter();
   const pathname = usePathname();
   const [memes, setMemes] = useState<Meme[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState('week'); // 'day', 'week', 'month'
 
   const isActive = (path: string) => pathname === path;
@@ -79,6 +77,17 @@ export default function TrendingPage() {
     });
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      const encodedQuery = encodeURIComponent(searchQuery.trim());
+      router.push(`/feed/search/memes?q=${encodedQuery}`);
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
 
   // --- Fetch Logic ---
   const fetchMemes = async (pageNum: number) => {
@@ -116,129 +125,79 @@ export default function TrendingPage() {
 
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8">
       
       {/* --- Feed Navigation --- */}
-      <div className="sticky top-0 z-30 bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/50 py-3 px-6">
-        <div className="max-w-480 mx-auto px-6 flex gap-2">
-          <Button 
-            asChild
-            variant={isActive('/feed') ? 'default' : 'ghost'}
-            size="sm"
-            className={isActive('/feed') ? '' : 'text-zinc-400 hover:text-zinc-200'}
-          >
-            <Link href="/feed">
-              <Flame className="h-4 w-4" />
+      <div className="flex mt-3 items-center gap-1 sm:gap-2 mb-2 overflow-x-auto scrollbar-none">
+          <Link href="/feed">
+            <Button
+              variant={isActive('/feed') || isActive('/') ? 'default' : 'ghost'}
+              size="sm"
+              className="shrink-0 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
+            >
+              <Flame className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               Home
-            </Link>
-          </Button>
-          <Button 
-            asChild
-            variant={isActive('/feed/trending') ? 'default' : 'ghost'}
-            size="sm"
-            className={isActive('/feed/trending') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
-          >
-            <Link href="/feed/trending">
-              <Flame className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="/feed/trending">
+            <Button
+              variant={isActive('/feed/trending') ? 'default' : 'ghost'}
+              size="sm"
+              className="shrink-0 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
+            >
+              <Flame className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               Trending
-            </Link>
-          </Button>
-          <Button 
-            asChild
-            variant={isActive('/feed/latest') ? 'default' : 'ghost'}
-            size="sm"
-            className={isActive('/feed/latest') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
-          >
-            <Link href="/feed/latest">
-              <Clock className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="/feed/latest">
+            <Button
+              variant={isActive('/feed/latest') ? 'default' : 'ghost'}
+              size="sm"
+              className="shrink-0 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
+            >
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               Latest
-            </Link>
-          </Button>
-        </div>
+            </Button>
+          </Link>
       </div>
 
-      {/* --- 1. Hero / Header Section --- */}
-      <div className="relative border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-xl z-20 top-0">
-        <div className="max-w-480 mx-auto px-6 py-6">
-            
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
-                <div className="flex flex-col gap-1">
-                  <h1
-                    className="
-                      flex items-center gap-2
-                      font-black italic tracking-tighter
-                      text-2xl sm:text-3xl md:text-4xl
-                    "
-                  >
-                    <Flame
-                      className="
-                        text-zinc-500 fill-zinc-500
-                        w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10
-                      "
-                    />
-                    <span className="bg-linear-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">
-                      TRENDING
-                    </span>
-                  </h1>
-
-                  <p
-                    className="
-                      text-zinc-500 font-medium
-                      text-sm sm:text-base
-                      ml-0.5 sm:ml-1
-                    "
-                  >
-                    What the internet is laughing at right now.
-                  </p>
-                </div>
-                {/* Time Filter Tabs */}
-                <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800">
-                    {['Today', 'This Week', 'All Time'].map((label) => {
-                        const val = label.toLowerCase().replace(' ', '');
-                        const isActive = timeFilter === (label === 'This Week' ? 'week' : val === 'alltime' ? 'all' : 'day');
-                        return (
-                            <button
-                                key={label}
-                                onClick={() => setTimeFilter(label === 'This Week' ? 'week' : val === 'alltime' ? 'all' : 'day')}
-                                className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-all ${
-                                    isActive 
-                                    ? 'bg-zinc-800 text-white shadow-sm' 
-                                    : 'text-zinc-500 hover:text-zinc-300'
-                                }`}
-                            >
-                                {label}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Hot Topics Chips */}
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar mask-gradient-right">
-                <div className="flex items-center gap-2 pr-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                    <TrendingUp className="w-4 h-4" />
-                    Hot Topics:
-                </div>
-                {TRENDING_TOPICS.map((topic, i) => (
-                    <Badge 
-                        key={topic}
-                        variant="secondary"
-                        className="bg-zinc-900 hover:bg-zinc-800 border-zinc-800 text-zinc-300 px-3 py-1 cursor-pointer whitespace-nowrap transition-colors"
-                    >
-                        # {topic}
-                    </Badge>
-                ))}
-            </div>
-        </div>
+      {/* Search bar — full width on mobile */}
+      <div className="flex items-center gap-2 w-full mt-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <Input
+              placeholder="Search memes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="pl-8 h-8 sm:h-9 text-sm w-full"
+            />
+          </div>
+          <Button
+            onClick={handleSearch}
+            size="sm"
+            className="shrink-0 h-8 sm:h-9 text-xs sm:text-sm px-2 sm:px-3"
+          >
+            Search
+          </Button>
+          {searchQuery && (
+            <Button
+              onClick={handleClearSearch}
+              variant="ghost"
+              size="sm"
+              className="shrink-0 h-8 sm:h-9 text-xs sm:text-sm px-2"
+            >
+              Clear
+            </Button>
+          )}
       </div>
 
       {/* --- 2. Main Content --- */}
-      <div className="max-w-480 mx-auto px-6 py-8">
-        
+      <div className="mt-3">
         <Masonry
             breakpointCols={breakpointColumnsObj}
-            className="my-masonry-grid"
-            columnClassName="my-masonry-grid_column"
+            className="flex w-auto -ml-2 sm:-ml-3"
+            columnClassName="pl-2 sm:pl-3 bg-clip-padding"
         >
             {memes.map((meme, index) => {
                 const isTop3 = index < 3;
@@ -247,7 +206,7 @@ export default function TrendingPage() {
                     <div 
                         key={`${meme._id}-${index}`} 
                         ref={index === memes.length - 1 ? lastMemeRef : undefined}
-                        className="break-inside-avoid mb-6 relative group"
+                        className="mb-2 sm:mb-3"
                     >
                         {/* Rank Badge for Top 3 */}
                         {isTop3 && (
