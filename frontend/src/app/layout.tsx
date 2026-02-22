@@ -6,7 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Navbar } from "@/components/parts/Header";
 import LoginModal from "@/components/auth/LoginModal";
 import Footer from "@/components/parts/Footer";
-
+import { GlobalBootLoader } from "@/components/providers/GlobalBootLoader";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -198,6 +198,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 text-zinc-100 min-h-screen flex flex-col`}
       >
         <AuthProvider>
+          <GlobalBootLoader />
           <Navbar />
           <main className="flex-1">
             <Toaster 

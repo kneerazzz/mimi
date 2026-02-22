@@ -49,9 +49,10 @@ import savedTemplateRouter from './routes/savedTemplates.routes.js'
 import createRouter from './routes/createMeme.routes.js'
 import { verifyJwt } from './middlewares/auth.middleware.js'
 import handleNewVisitor from './middlewares/handleNewVisitor.middleware.js'
+import { healthCheck } from './controllers/health.controller.js'
 
 
-app.use("/", verifyJwt)
+app.get("/api/v1/health", healthCheck)
 app.use("/", handleNewVisitor)
 
 app.use("/api/v1/users", userRouter)

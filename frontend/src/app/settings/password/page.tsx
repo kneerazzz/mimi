@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { sendPasswordChangeEmail, resetPassword } from '@/services/userService';
+import axios from 'axios'; // Import standard axios for the local API route
+import { resetPassword } from '@/services/userService'; // Removed sendPasswordChangeEmail
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,29 +15,44 @@ import { Loader2, Mail, Lock } from 'lucide-react';
 export default function PasswordSettingsPage() {
   const { user } = useAuth();
 
-  // Removed 'email' state since we strictly use user.email now
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
   const [sendingEmail, setSendingEmail] = useState(false);
   const [resetting, setResetting] = useState(false);
 
-  const handleSendEmail = async (e: React.FormEvent) => {
+const handleSendEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user?.email) {
       toast.error('User email not found. Please try reloading.');
       return;
     }
-    console.log('Sending OTP to:', user.email); // Debug log
 
     try {
       setSendingEmail(true);
-      await sendPasswordChangeEmail(user.email);
+      
+      await fetch('/api/sendMail', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: user.email }),
+      }).then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          // You throw the error here...
+          throw new Error(data.error || 'Failed to send email');
+        }
+      });
+      
       toast.success(`Verification email sent to ${user.email}`);
-    } catch (error) {
-      toast.error('Failed to send email');
-      console.error(error);
+    } catch (error: any) {
+      // ...and you must catch it using error.message here!
+      const errorMessage = error.message || 'Failed to send email';
+      
+      toast.error(errorMessage);
+      console.error("Email error:", error);
     } finally {
       setSendingEmail(false);
     }
@@ -52,15 +68,17 @@ export default function PasswordSettingsPage() {
 
     try {
       setResetting(true);
+      
+      // This stays the same: it talks to your Render backend directly to verify and save
       await resetPassword({ email: user.email, otp, newPassword });
+      
       toast.success('Password reset successfully');
       setOtp('');
       setNewPassword('');
-      // Optional: Redirect or just let them stay since they are already logged in
-      // router.push('/login'); 
-    } catch (error) {
-      toast.error('Failed to reset password');
-      console.error(error);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to reset password';
+      toast.error(errorMessage);
+      console.error("Reset error:", error);
     } finally {
       setResetting(false);
     }
@@ -88,8 +106,8 @@ export default function PasswordSettingsPage() {
                 id="email"
                 type="email"
                 value={user?.email || ''}
-                disabled // Locked field
-                readOnly // Ensure non-editable
+                disabled 
+                readOnly 
                 className="bg-zinc-900/50 border-zinc-800 text-sm text-zinc-400 cursor-not-allowed opacity-75"
               />
               <p className="text-[10px] text-zinc-600">

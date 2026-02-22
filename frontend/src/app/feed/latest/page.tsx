@@ -136,6 +136,7 @@ export default function LatestMemesPage() {
             className={isActive('/feed') ? '' : 'text-zinc-400 hover:text-zinc-200'}
           >
             <Link href="/feed">
+              <Flame className="h-4 w-4" />
               Home
             </Link>
           </Button>
@@ -152,11 +153,11 @@ export default function LatestMemesPage() {
           </Button>
           <Button 
             asChild
-            variant={isActive('/feed/new') ? 'default' : 'ghost'}
+            variant={isActive('/feed/latest') ? 'default' : 'ghost'}
             size="sm"
-            className={isActive('/feed/new') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
+            className={isActive('/feed/latest') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
           >
-            <Link href="/feed/new">
+            <Link href="/feed/latest">
               <Clock className="h-4 w-4" />
               Latest
             </Link>
@@ -169,19 +170,37 @@ export default function LatestMemesPage() {
         <div className="max-w-480 mx-auto px-6 py-6">
             
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-4xl font-black flex items-center gap-3 italic tracking-tighter">
-                        <Sparkles className="w-10 h-10 text-zinc-500 fill-zinc-500/20" />
-                        <span className="bg-linear-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">
-                            LATEST MEMES
-                        </span>
-                    </h1>
-                    <p className="text-zinc-500 font-medium mt-1 ml-1 flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        Fresh off the internet
-                    </p>
-                </div>
+                <div className="flex flex-col gap-1">
+                  <h1
+                    className="
+                      flex items-center gap-2
+                      font-black italic tracking-tighter
+                      text-2xl sm:text-3xl md:text-4xl
+                    "
+                  >
+                    <Sparkles
+                      className="
+                        text-zinc-500 fill-zinc-500/20
+                        w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10
+                      "
+                    />
+                    <span className="bg-linear-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">
+                      LATEST MEMES
+                    </span>
+                  </h1>
 
+                  <p
+                    className="
+                      flex items-center gap-1.5
+                      text-zinc-500 font-medium
+                      text-sm sm:text-base
+                      ml-0.5 sm:ml-1
+                    "
+                  >
+                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    Fresh off the internet
+                  </p>
+                </div>
                 {/* Refresh Button */}
                 <button
                     onClick={handleRefresh}

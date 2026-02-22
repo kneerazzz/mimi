@@ -11,10 +11,15 @@ const UUID_COOKIE_OPTIONS = {
 
 const handleNewVisitor = asyncHandler(async(req, res, next) => {
     try {
+        // 1. FIX: IF THIS IS NEXT.JS CALLING, SKIP EVERYTHING!
+        if (req.headers['x-internal-secret'] === process.env.INTERNAL_SECRET_KEY) {
+            return next();
+        }
 
         if(req.user){
             return next();
         }
+        
         let user = null;
         const clientUuid = req.cookies?.visitor_uuid;
         let shouldSetCookie = false;
@@ -25,12 +30,12 @@ const handleNewVisitor = asyncHandler(async(req, res, next) => {
             })
         }
         if(!user){
-            // Creates new anonymous user (is_registered: false by default)
+            // Creates new anonymous user
             user = await User.create({});
             shouldSetCookie = true;
         }
         else if(!clientUuid || user.uuid !== clientUuid){
-            shouldSetCookie = true; // FIX: Use assignment operator =
+            shouldSetCookie = true; 
         }
         if(shouldSetCookie && user){
             res.cookie("visitor_uuid", user.uuid, UUID_COOKIE_OPTIONS)

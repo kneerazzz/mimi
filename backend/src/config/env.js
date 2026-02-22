@@ -15,7 +15,6 @@ export const {
   CLOUDINARY_CLOUD_NAME,
   GEMINI_API_KEY,
   GEMINI_API_URL,
-  EMAIL_USER,
-  EMAIL_PASS
+  INTERNAL_SECRET_KEY
 } = process.env
 

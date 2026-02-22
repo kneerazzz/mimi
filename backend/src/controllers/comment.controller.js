@@ -198,6 +198,10 @@ const getAllComments = asyncHandler(async(req, res)=> {
 });
 
 const getCommentReplies = asyncHandler(async(req, res) => {
+    const user = req.user;
+    if(!user.is_registered){
+        throw new ApiError(401, "Login required!")
+    }
     const { parentCommentId } = req.params;
     if(!parentCommentId){
         throw new ApiError(400, "Bad request. ParentCommentId required!")

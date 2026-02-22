@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { AlertCircle, Search, Flame, Clock, Loader2, Coffee, Server } from 'lucide-react';
 import { getHomeMemes } from '@/services/memeService';
 import Masonry from 'react-masonry-css';
-import ColdStartLoader from '../ui/coldstart';
 /* ---------------- Masonry Breakpoints ---------------- */
 const breakpointColumnsObj = {
   default: 5,  // 1920px and up (Ultra wide)
@@ -123,7 +122,7 @@ const HomeFeed = () => {
         <div className="flex items-center gap-1 sm:gap-2 mb-2 overflow-x-auto scrollbar-none">
           <Link href="/feed">
             <Button
-              variant={isActive('/feed') ? 'default' : 'ghost'}
+              variant={isActive('/feed') || isActive('/') ? 'default' : 'ghost'}
               size="sm"
               className="shrink-0 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3"
             >
@@ -187,9 +186,6 @@ const HomeFeed = () => {
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <div className="mt-3">
-
-        {/* Cold Start Loader */}
-        {isLoading && memes.length === 0 && !error && <ColdStartLoader />}
 
         {/* Error State */}
         {error && memes.length === 0 && (

@@ -128,6 +128,7 @@ export default function TrendingPage() {
             className={isActive('/feed') ? '' : 'text-zinc-400 hover:text-zinc-200'}
           >
             <Link href="/feed">
+              <Flame className="h-4 w-4" />
               Home
             </Link>
           </Button>
@@ -144,11 +145,11 @@ export default function TrendingPage() {
           </Button>
           <Button 
             asChild
-            variant={isActive('/feed/new') ? 'default' : 'ghost'}
+            variant={isActive('/feed/latest') ? 'default' : 'ghost'}
             size="sm"
-            className={isActive('/feed/new') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
+            className={isActive('/feed/latest') ? 'gap-2' : 'gap-2 text-zinc-400 hover:text-zinc-200'}
           >
-            <Link href="/feed/new">
+            <Link href="/feed/latest">
               <Clock className="h-4 w-4" />
               Latest
             </Link>
@@ -161,18 +162,35 @@ export default function TrendingPage() {
         <div className="max-w-480 mx-auto px-6 py-6">
             
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
-                <div>
-                    <h1 className="text-4xl font-black flex items-center gap-3 italic tracking-tighter">
-                        <Flame className="w-10 h-10 text-zinc-500 fill-zinc-500" />
-                        <span className="bg-linear-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">
-                            TRENDING
-                        </span>
-                    </h1>
-                    <p className="text-zinc-500 font-medium mt-1 ml-1">
-                        What the internet is laughing at right now.
-                    </p>
-                </div>
+                <div className="flex flex-col gap-1">
+                  <h1
+                    className="
+                      flex items-center gap-2
+                      font-black italic tracking-tighter
+                      text-2xl sm:text-3xl md:text-4xl
+                    "
+                  >
+                    <Flame
+                      className="
+                        text-zinc-500 fill-zinc-500
+                        w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10
+                      "
+                    />
+                    <span className="bg-linear-to-r from-zinc-400 to-zinc-600 bg-clip-text text-transparent">
+                      TRENDING
+                    </span>
+                  </h1>
 
+                  <p
+                    className="
+                      text-zinc-500 font-medium
+                      text-sm sm:text-base
+                      ml-0.5 sm:ml-1
+                    "
+                  >
+                    What the internet is laughing at right now.
+                  </p>
+                </div>
                 {/* Time Filter Tabs */}
                 <div className="flex bg-zinc-900 p-1 rounded-lg border border-zinc-800">
                     {['Today', 'This Week', 'All Time'].map((label) => {
@@ -252,7 +270,7 @@ export default function TrendingPage() {
         {/* Load More / Loading State */}
         {loading && (
             <div className="py-12 flex flex-col items-center justify-center gap-4">
-                <div className="w-12 h-12 border-4 border-zinc-800 border-t-orange-500 rounded-full animate-spin" />
+                <div className="w-12 h-12 border-4 border-zinc-800 border-t-zinc-500 rounded-full animate-spin" />
                 <p className="text-zinc-500 animate-pulse">Checking the vibe...</p>
             </div>
         )}

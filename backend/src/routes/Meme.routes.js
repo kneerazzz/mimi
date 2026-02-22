@@ -6,17 +6,21 @@ const router = Router()
 
 
 router.route("/homepage").get(
+    verifyJwt,
     getHomeFeed
 )
 
 router.route("/details/:contentId/:contentType").get(
+    verifyJwt,
     getMemeDetails
 )
 
 router.route("/trending-memes").get(
+    verifyJwt,
     getTrendingMemes
 )
 router.route("/latest-memes").get(
+    verifyJwt,
     getNewestMemes
 )
 router.route("/search-memes").get(

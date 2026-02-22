@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const logout = async () => {
         await logoutUser();
         setUser(null);
-        window.location.reload();
+        window.location.href = "/";
     };
 
     const register = async (credentials: any) => {

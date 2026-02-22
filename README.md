@@ -64,6 +64,14 @@ Unlike basic caption tools, the Mimi Editor is a full-featured canvas design too
 
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
+
+# Email
+GMAIL_USER="YOUR_GMAIL"
+GMAIL_APP_PASSWORD="YOUR_GMAIL_PASS"
+
+
+#INTERNAL_SECRET_KEY (same key as backend)
+INTERNAL_SECRET_KEY="ANY_RANDOM_KEY"
 ```
 
 ### Backend — `backend/.env.local`
@@ -90,9 +98,8 @@ REFRESH_TOKEN_EXPIRY="10d"
 GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
 GEMINI_API_URL="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-2025:generateContent"
 
-# Email
-EMAIL_USER="YOUR_EMAIL_ADDRESS"
-EMAIL_PASS="YOUR_EMAIL_PASSWORD"
+# INTERNAL_SECRET_KEY (same key used in the frontend)
+INTERNAL_SECRET_KEY="ANY_RANDOM_KEY"
 ```
 
 ---
