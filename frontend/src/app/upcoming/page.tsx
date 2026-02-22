@@ -1,6 +1,4 @@
 'use client';
-
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -128,12 +126,12 @@ export default function UpcomingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <div></div>
           <div className="flex gap-2 sm:gap-4 items-center flex-wrap justify-end">
-            <Link 
+            <a 
               href="/features"
               className="text-xs sm:text-sm text-zinc-400 hover:text-white transition-colors"
             >
               Current Features
-            </Link>
+            </a>
             {!user?.is_registered && (
               <Button variant="ghost" onClick={() => setShowLoginModal(true)} className="text-xs sm:text-sm">
                 Log in

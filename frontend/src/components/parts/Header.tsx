@@ -296,6 +296,12 @@ export function Navbar() {
                         </Link>
                       </Button>
                       <Button asChild variant="ghost" className="justify-start gap-3">
+                        <Link href="/explore" onClick={() => setMobileMenuOpen(false)}>
+                          <Compass className="h-5 w-5" />
+                          Explore
+                        </Link>
+                      </Button>
+                      <Button asChild variant="ghost" className="justify-start gap-3">
                         <Link href="/features" onClick={() => setMobileMenuOpen(false)}>
                           <Star className="h-5 w-5" />
                           Features

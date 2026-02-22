@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 
 const BOOT_LINES = [
   { delay: 0,    text: 'Booting free-tier instance...'        },
@@ -110,7 +109,7 @@ export const ColdStartLoader = () => {
 
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row gap-2 mt-3">
-          <Link href="/features" className="flex-1">
+          <a href="/features" className="flex-1">
             <Button
               variant="outline"
               size="sm"
@@ -118,7 +117,7 @@ export const ColdStartLoader = () => {
             >
               Read features while waiting
             </Button>
-          </Link>
+          </a>
           <Button
             disabled
             size="sm"

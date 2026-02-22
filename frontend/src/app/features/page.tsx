@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -412,13 +411,13 @@ export default function FeaturesPage() {
               We're working on next-generation tools that will revolutionize meme creation. Check out what's coming to MIMI in the near future.
             </p>
             <p className="text-xs sm:text-sm text-zinc-500 mb-6 sm:mb-8">AI-powered meme generation, video editing, smart templates, and much more...</p>
-            <Link 
+            <a
                 href="/upcoming" 
                 className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-zinc-600 hover:bg-zinc-700 text-white font-semibold rounded-full transition-all hover:shadow-lg hover:shadow-zinc-600/30 text-sm sm:text-base"
             >
               <Rocket className="w-4 sm:w-5 h-4 sm:h-5" />
               View Roadmap & Upcoming Features
-            </Link>
+            </a>
         </div>
       </section>
 
