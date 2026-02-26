@@ -1,6 +1,21 @@
 import axios from 'axios';
+
 const REDDIT_BASE_URL = "https://www.reddit.com";
-const SUBREDDIT = "memes";
+
+// 1. Array of diverse, higher-quality, and Indian subreddits
+const SUBREDDITS_LIST = [
+    "dankmemes",
+    "shitposting",       // For unhinged/goated memes
+    "me_irl",
+    "IndianDankMemes",   // Top tier Indian memes
+    "SaimanSays",        // Classic Indian meme community
+    "FingMemes",
+    "dankinindia"
+];
+
+// Join them with a '+' so Reddit combines the feeds automatically
+const TARGET_SUBREDDITS = SUBREDDITS_LIST.join("+"); 
+
 /**
  * Filters the raw Reddit data, extracts essential fields, and cleans the post IDs.
  * @param {Array} children - Array of post objects from the Reddit response data.
@@ -8,7 +23,7 @@ const SUBREDDIT = "memes";
  */
 const processRedditData = (children) => {
     const now = new Date();
-    
+
     return children
         .map(child => child.data)
         .filter(data => 
@@ -29,18 +44,19 @@ const processRedditData = (children) => {
 };
 
 /**
- * Fetches the hottest memes from the target subreddit and returns clean data.
- * Uses the unauthenticated public JSON endpoint.
+ * Fetches the hottest memes from multiple combined subreddits and returns clean data.
  * @param {number} limit - The number of posts to fetch.
  * @returns {Array} - An array of cleaned meme post objects.
  */
-const fetchMemeFeedFromReddit = async (limit = 200) => {
-    const url = `${REDDIT_BASE_URL}/r/${SUBREDDIT}/hot.json?limit=${limit}`;
+const fetchMemeFeedFromReddit = async (limit = 100) => {
+    // 2. Inject the combined subreddits into the URL
+    const url = `${REDDIT_BASE_URL}/r/${TARGET_SUBREDDITS}/hot.json?limit=${limit}`;
 
     try {
         const response = await axios.get(url, {
             headers: {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36'}
         });
+        
         const children = response.data?.data?.children;
         if (!children || children.length === 0) {
             console.warn("Reddit fetch succeeded but returned no posts.");
