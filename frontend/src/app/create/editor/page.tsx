@@ -73,6 +73,7 @@ function EditorContent() {
   // ✅ nullable-safe hook usage
   const { generateCanvas } = useCanvas(
     canvasRef,
+    containerRef,
     imageObj,
     imageLoaded,
     layers,
@@ -200,11 +201,11 @@ function EditorContent() {
     }
 
     try {
-      // Generate canvas first to ensure everything is rendered
-      generateCanvas();
-      
-      // Wait a bit for canvas to render, especially for text
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Canvas drawing is synchronous; measure the current preview before encoding.
+      if (!generateCanvas()) {
+        toast.error('Preview not ready. Please try again.');
+        return;
+      }
       
       // Ensure canvas is ready
       if (!canvasRef.current) return;
@@ -331,7 +332,10 @@ function EditorContent() {
             toast.error('Please login to publish');
             return;
           }
-          generateCanvas();
+          if (!generateCanvas()) {
+            toast.error('Preview not ready. Please try again.');
+            return;
+          }
           setIsPublishDialogOpen(true);
         }}
       />
