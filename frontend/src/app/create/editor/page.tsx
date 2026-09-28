@@ -45,7 +45,7 @@ function EditorContent() {
     setFilters,
     loadedImages,
     customImage,
-    setCustomImage,
+    replaceBaseImage,
     addText,
     handleImageLayerUpload,
     updateLayer,
@@ -201,6 +201,9 @@ function EditorContent() {
     }
 
     try {
+      // Canvas does not automatically redraw text after a font finishes loading.
+      // Wait here so the exported font matches the DOM preview.
+      await document.fonts.ready;
       // Canvas drawing is synchronous; measure the current preview before encoding.
       if (!generateCanvas()) {
         toast.error('Preview not ready. Please try again.');
@@ -226,7 +229,7 @@ function EditorContent() {
     if (croppingLayerId) {
       updateLayer(croppingLayerId, { imageUrl: croppedImageUrl });
     } else {
-      setCustomImage(croppedImageUrl);
+      replaceBaseImage(croppedImageUrl);
     }
   };
 
@@ -314,7 +317,7 @@ function EditorContent() {
         return layer.imageUrl;
       }
     }
-    return customImage || template?.imageUrl;
+    return customImage || template?.imageUrl || null;
   }
   return (
     <div className="h-screen bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden">
@@ -327,11 +330,12 @@ function EditorContent() {
         handleLoad={handleLoad}
         customImage={customImage}
         onCropClick={() => openCropDialog(null)}
-        onPublishClick={() => {
+        onPublishClick={async () => {
           if (!user) {
             toast.error('Please login to publish');
             return;
           }
+          await document.fonts.ready;
           if (!generateCanvas()) {
             toast.error('Preview not ready. Please try again.');
             return;
@@ -351,7 +355,7 @@ function EditorContent() {
         isOpen={isPublishDialogOpen}
         onClose={() => setIsPublishDialogOpen(false)}
         canvasRef={canvasRef}
-        textLayers={layers.filter(l => l.type === 'text')}
+        textLayers={layers.filter((layer): layer is TextLayer => layer.type === 'text' && layer.isVisible)}
         templateId={templateId}
         username={user?.username || null}
         type={type}
@@ -384,7 +388,6 @@ function EditorContent() {
             customImage={customImage}
             zoom={zoom}
             isDragging={isDragging}
-            advancedMode={advancedMode}
             filters={filters}
             imageObj={imageObj}
             layers={layers}

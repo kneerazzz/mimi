@@ -1,15 +1,14 @@
 import React, { RefObject } from 'react';
-import { Layer, hexToRgba, formatText } from '../types';
+import { EditorTemplate, Layer, hexToRgba, formatText } from '../types';
 
 interface EditorCanvasProps {
   containerRef: RefObject<HTMLDivElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   imageLoaded: boolean;
-  template: any;
+  template: EditorTemplate | null;
   customImage: string | null;
   zoom: number;
   isDragging: boolean;
-  advancedMode: boolean;
   filters: { brightness: number; contrast: number; saturate: number; blur: number };
   imageObj: HTMLImageElement | null;
   layers: Layer[];
@@ -25,7 +24,6 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
   customImage,
   zoom,
   isDragging,
-  advancedMode,
   filters,
   imageObj,
   layers,
@@ -44,18 +42,21 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
         {imageLoaded && template && (
           <div
             ref={containerRef}
-            className="relative shadow-2xl shadow-black/50 select-none ring-1 ring-zinc-800 max-h-[50vh] md:max-h-[85vh] max-w-full md:max-w-[85vw]"
+            className="relative overflow-hidden shadow-2xl shadow-black/50 select-none ring-1 ring-zinc-800 max-h-[50vh] md:max-h-[85vh] max-w-full md:max-w-[85vw]"
             style={{
               transform: `scale(${zoom / 100})`,
               aspectRatio: `${imageObj?.naturalWidth}/${imageObj?.naturalHeight}`,
-              filter: advancedMode ? `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturate}%) blur(${filters.blur}px)` : 'none',
               transition: isDragging ? 'none' : 'transform 0.2s ease-out'
             }}
           >
-            <img src={customImage || template.imageUrl} alt="" className="w-full h-full object-contain pointer-events-none" />
+            <img
+              src={customImage || template.imageUrl}
+              alt=""
+              className="w-full h-full object-contain pointer-events-none"
+              style={{ filter: `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturate}%) blur(${filters.blur}px)` }}
+            />
 
-            {layers.filter(l => l.isVisible).map((layer) => {
-              // ... (Keep existing layer rendering logic exactly as is)
+            {layers.filter(l => l.isVisible).map((layer, layerIndex) => {
                if (layer.type === 'image') {
                 return (
                   <div
@@ -69,7 +70,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                       transform: `translate(-50%, -50%) rotate(${layer.rotation}deg)`,
                       opacity: layer.opacity / 100,
                       cursor: isDragging ? 'grabbing' : 'grab',
-                      zIndex: selectedId === layer.id ? 50 : 10,
+                      zIndex: layerIndex + 1,
                       width: `${layer.width}px`,
                       height: `${layer.height}px`,
                     }}
@@ -132,7 +133,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                     maxWidth: '100%',
                     ...(hasExplicitHeight ? { maxHeight: `${text.height}px` } : {}),
                     overflow: 'hidden',
-                    zIndex: selectedId === text.id ? 50 : 10
+                    zIndex: layerIndex + 1
                   }}
                   className={`group hover:scale-[1.02] transition-transform ${
                     selectedId === text.id

@@ -9,12 +9,14 @@ import { toast } from 'sonner';
 import { X, Loader2 } from 'lucide-react';
 import { createMemeManyally } from '@/services/memeService';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
+import { TextLayer } from '../types';
 
 interface PublishDialogProps {
   isOpen: boolean;
   onClose: () => void;
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
-  textLayers: any[];
+  textLayers: TextLayer[];
   templateId: string | null;
   username: string | null;
   type?: string;
@@ -97,13 +99,13 @@ export const PublishDialog: React.FC<PublishDialogProps> = ({
       const transformedTextLayers = textLayers.map(layer => ({
         x: layer.x ?? 50,
         y: layer.y ?? 10,
-        size: layer.fontSize ?? layer.size ?? 24,
-        layerWidth: layer.width ?? layer.layerWidth ?? 90,
+        size: layer.fontSize ?? 24,
+        layerWidth: layer.width ?? 90,
         text: layer.text || '',
         fontFamily: layer.fontFamily || 'Impact',
         fillColor: layer.fillColor || '#ffffff',
         strokeColor: layer.strokeColor || '#000000',
-        strokeWidth: layer.strokeWidth || 2,
+        strokeWidth: layer.strokeWidth ?? 2,
         textAlign: layer.textAlign || 'center',
         opacity: layer.opacity ?? 100,
       }));
@@ -131,9 +133,12 @@ export const PublishDialog: React.FC<PublishDialogProps> = ({
       setTimeout(() => {
         router.push(`/feed/${response.data._id}?type=CreatedMeme`);
       }, 500);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Publish error:', error);
-      toast.error(error.response?.data?.message || 'Failed to publish meme');
+      const message = axios.isAxiosError<{ message?: string }>(error)
+        ? error.response?.data?.message
+        : undefined;
+      toast.error(message || 'Failed to publish meme');
     } finally {
       setIsPublishing(false);
     }

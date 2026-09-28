@@ -31,7 +31,12 @@ export function renderCanvas(
     ctx.rotate(layer.rotation * Math.PI / 180);
     if (layer.type === 'image') {
       const overlay = loadedImages.get(layer.imageUrl);
-      if (overlay) ctx.drawImage(overlay, -layer.width / 2, -layer.height / 2, layer.width, layer.height);
+      // Never produce a successful export that silently drops an image layer.
+      if (!overlay || !overlay.complete || overlay.naturalWidth === 0) {
+        ctx.restore();
+        return false;
+      }
+      ctx.drawImage(overlay, -layer.width / 2, -layer.height / 2, layer.width, layer.height);
       ctx.restore();
       continue;
     }
@@ -83,22 +88,39 @@ export function renderCanvas(
     const ascent = metrics.fontBoundingBoxAscent ?? text.fontSize * 0.8;
     const descent = metrics.fontBoundingBoxDescent ?? text.fontSize * 0.2;
     const baseline = top + padding + (lineHeight - ascent - descent) / 2 + ascent;
-    if (text.shadowEnabled) {
-      ctx.shadowColor = text.shadowColor;
-      // Canvas shadows are device pixels, unlike coordinates under ctx.scale().
-      ctx.shadowBlur = text.shadowBlur * scaleX;
-      ctx.shadowOffsetX = text.shadowOffsetX * scaleX;
-      ctx.shadowOffsetY = text.shadowOffsetY * scaleY;
-    }
     lines.forEach((line, index) => {
       const y = baseline + index * lineHeight;
-      if (text.strokeWidth > 0 && text.strokeColor) {
+      // CSS creates one shadow for the text. Leaving the Canvas shadow enabled
+      // for both strokeText and fillText paints it twice and makes narrow
+      // outlines look much heavier after export.
+      const hasStroke = text.strokeWidth > 0 && Boolean(text.strokeColor);
+      if (text.shadowEnabled) {
+        ctx.shadowColor = text.shadowColor;
+        // Canvas shadow values are not affected by the current transform.
+        ctx.shadowBlur = text.shadowBlur * Math.max(scaleX, scaleY);
+        ctx.shadowOffsetX = text.shadowOffsetX * scaleX;
+        ctx.shadowOffsetY = text.shadowOffsetY * scaleY;
+        if (hasStroke) {
+          ctx.strokeStyle = text.strokeColor;
+          ctx.lineWidth = text.strokeWidth;
+          ctx.strokeText(line, textX, y);
+        } else {
+          ctx.fillStyle = text.fillColor || '#ffffff';
+          ctx.fillText(line, textX, y);
+        }
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      }
+      if (hasStroke && !text.shadowEnabled) {
         ctx.strokeStyle = text.strokeColor;
         ctx.lineWidth = text.strokeWidth;
         ctx.strokeText(line, textX, y);
       }
       ctx.fillStyle = text.fillColor || '#ffffff';
-      ctx.fillText(line, textX, y);
+      // With no stroke, the shadow pass already painted the fill itself.
+      if (!text.shadowEnabled || hasStroke) ctx.fillText(line, textX, y);
     });
     ctx.restore();
   }

@@ -37,6 +37,13 @@ export interface TextLayer {
     isVisible: boolean;
     isLocked: boolean;
   }
+
+  export interface EditorTemplate {
+    imageUrl: string;
+    name?: string;
+    title?: string;
+    [key: string]: unknown;
+  }
   
   export interface ImageLayer {
     id: string;

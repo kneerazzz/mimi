@@ -32,8 +32,10 @@ export function CropDialog({ isOpen, onClose, imageSrc, onCrop }: CropDialogProp
     const canvas = document.createElement('canvas');
     const scaleX = imageRef.current.naturalWidth / imageRef.current.width;
     const scaleY = imageRef.current.naturalHeight / imageRef.current.height;
-    canvas.width = crop.width;
-    canvas.height = crop.height;
+    const outputWidth = Math.max(1, Math.round(crop.width * scaleX));
+    const outputHeight = Math.max(1, Math.round(crop.height * scaleY));
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
     const ctx = canvas.getContext('2d');
 
     if (!ctx) {
@@ -48,20 +50,12 @@ export function CropDialog({ isOpen, onClose, imageSrc, onCrop }: CropDialogProp
       crop.height * scaleY,
       0,
       0,
-      crop.width,
-      crop.height
+      outputWidth,
+      outputHeight
     );
 
-    return new Promise<string>((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          reject(new Error('Canvas is empty'));
-          return;
-        }
-        const fileUrl = window.URL.createObjectURL(blob);
-        resolve(fileUrl);
-      }, 'image/png');
-    });
+    // Unlike an object URL, this remains valid after saving and reloading.
+    return canvas.toDataURL('image/png');
   };
 
   const handleCrop = async () => {
@@ -80,7 +74,7 @@ export function CropDialog({ isOpen, onClose, imageSrc, onCrop }: CropDialogProp
         </DialogHeader>
         {imageSrc && (
           <ReactCrop crop={crop} onChange={c => setCrop(c)}>
-            <img ref={imageRef} src={imageSrc} />
+            <img ref={imageRef} src={imageSrc} crossOrigin="anonymous" alt="Image to crop" />
           </ReactCrop>
         )}
         <DialogFooter>

@@ -3,7 +3,7 @@ import { useState, useEffect, RefObject } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { getTemplateById, getUserTemplate } from '@/services/templateService';
-import { Layer, TextLayer, ImageLayer } from '../types';
+import { EditorTemplate, Layer, TextLayer, ImageLayer } from '../types';
 import { useHistory } from './useHistory';
 
 const initialLayers: Layer[] = [
@@ -32,7 +32,7 @@ const initialLayers: Layer[] = [
       backgroundOpacity: 0, 
       backgroundPadding: 10, 
       backgroundRadius: 0,
-      shadowEnabled: true, 
+      shadowEnabled: false,
       shadowColor: '#000000', 
       shadowBlur: 10, 
       shadowOffsetX: 2, 
@@ -65,7 +65,7 @@ const initialLayers: Layer[] = [
       backgroundOpacity: 0, 
       backgroundPadding: 10, 
       backgroundRadius: 0,
-      shadowEnabled: true, 
+      shadowEnabled: false,
       shadowColor: '#000000', 
       shadowBlur: 10, 
       shadowOffsetX: 2, 
@@ -75,13 +75,24 @@ const initialLayers: Layer[] = [
     } as TextLayer,
   ];
 
+interface SavedEditorState {
+  layers?: Layer[];
+  filters?: { brightness: number; contrast: number; saturate: number; blur: number };
+  customImage?: string;
+  templateId?: string;
+  template?: EditorTemplate;
+  zoom?: number;
+  selectedId?: string;
+  advancedMode?: boolean;
+}
+
 export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) => {
   const searchParams = useSearchParams();
   const templateId = searchParams.get('templateId');
   const type = searchParams.get('type') || 'public';
 
   const [loading, setLoading] = useState(false);
-  const [template, setTemplate] = useState<any>(null);
+  const [template, setTemplate] = useState<EditorTemplate | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageObj, setImageObj] = useState<HTMLImageElement | null>(null);
   const [advancedMode, setAdvancedMode] = useState(false);
@@ -95,6 +106,63 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
   const [customImage, setCustomImage] = useState<string | null>(null);
 
   const { saveHistory, undo, redo, history, historyIndex } = useHistory(initialLayers);
+
+  // Preview <img> elements can use a URL immediately, but Canvas export needs a
+  // decoded HTMLImageElement. Rebuild that cache for saved and cropped layers.
+  useEffect(() => {
+    let cancelled = false;
+    const missingUrls = Array.from(new Set(
+      layers
+        .filter((layer): layer is ImageLayer => layer.type === 'image')
+        .map(layer => layer.imageUrl)
+        .filter(url => !loadedImages.has(url))
+    ));
+
+    if (missingUrls.length === 0) return;
+
+    Promise.all(missingUrls.map(url => new Promise<[string, HTMLImageElement] | null>((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve([url, img]);
+      img.onerror = () => resolve(null);
+      img.src = url;
+    }))).then(results => {
+      if (cancelled) return;
+      setLoadedImages(current => {
+        const next = new Map(current);
+        results.forEach(result => {
+          if (result) next.set(result[0], result[1]);
+        });
+        return next;
+      });
+    });
+
+    return () => { cancelled = true; };
+    // Layer URL changes trigger hydration. Including loadedImages would retry a
+    // failed URL continuously.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layers]);
+
+  const replaceBaseImage = (imageUrl: string) => {
+    setImageLoaded(false);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      setCustomImage(imageUrl);
+      setImageObj(img);
+      setTemplate(current => ({
+        ...(current || {}),
+        imageUrl,
+        name: current?.name || 'Cropped image',
+      }));
+      setImageLoaded(true);
+    };
+    img.onerror = () => {
+      setImageLoaded(Boolean(imageObj));
+      toast.error('Failed to load cropped image');
+    };
+    img.src = imageUrl;
+  };
 
   // Load saved state on mount (only if no templateId in URL)
   useEffect(() => {
@@ -129,7 +197,7 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
     } catch (error) {
       console.error('Failed to load saved state:', error);
     }
-  }, []); // Only run on mount
+  }, [templateId]);
 
   useEffect(() => {
     const fetchTemplate = async () => {
@@ -138,7 +206,7 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
         setLoading(true);
         let data;
         if (type === 'user') {
-          const res = await getUserTemplate(templateId as any);
+          const res = await getUserTemplate(templateId);
           // User template structure: directly has imageUrl and name
           data = res.data?.template || res.data;
           // Normalize to have consistent structure (name instead of title)
@@ -146,7 +214,7 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
             data.name = data.title;
           }
         } else {
-          const res = await getTemplateById(templateId as any);
+          const res = await getTemplateById(templateId);
           // Public template structure: might have title property
           data = res.data?.template || res.data;
           // Normalize to have consistent structure
@@ -195,7 +263,7 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
       backgroundOpacity: 0, 
       backgroundPadding: 10, 
       backgroundRadius: 0,
-      shadowEnabled: true, 
+      shadowEnabled: false,
       shadowColor: '#000000', 
       shadowBlur: 10, 
       shadowOffsetX: 2, 
@@ -353,10 +421,6 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
     setIsDragging(false);
   };
 
-  const setSelectedLayerId = (id: string) => {
-    setSelectedId(id);
-  };
-
   const toggleLayerVisibility = (id: string) => {
     const newLayers = layers.map((l) =>
       l.id === id ? ({ ...l, isVisible: !l.isVisible } as Layer) : l
@@ -422,7 +486,7 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
 
   const selectedLayer = layers.find(l => l.id === selectedId);
 
-  const loadSavedState = (savedData: any) => {
+  const loadSavedState = (savedData: SavedEditorState) => {
     try {
       if (savedData.layers && Array.isArray(savedData.layers) && savedData.layers.length > 0) {
         setLayers(savedData.layers);
@@ -474,7 +538,7 @@ export const useEditorState = (containerRef: RefObject<HTMLDivElement | null >) 
     setFilters,
     loadedImages,
     customImage,
-    setCustomImage,
+    replaceBaseImage,
     addText,
     handleImageLayerUpload,
     updateLayer,

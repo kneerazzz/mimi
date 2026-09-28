@@ -235,7 +235,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                               strokeColor: '#000000',
                               strokeWidth: 3,
                               backgroundOpacity: 0,
-                              shadowEnabled: true,
+                              shadowEnabled: false,
                             })
                           }
                         >
@@ -373,7 +373,7 @@ export const EditorSidebar: React.FC<EditorSidebarProps> = ({
                               strokeColor: '#000000',
                               strokeWidth: 3,
                               backgroundOpacity: 0,
-                              shadowEnabled: true,
+                              shadowEnabled: false,
                             })
                           }
                         >
